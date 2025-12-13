@@ -17,13 +17,13 @@ FarmVenture is an agritourism platform designed to bridge local farms with exper
 
 ## What FarmVenture Offers
 
-# Browse Farm Products 
+ Browse Farm Products 
 View fresh, seasonal produce and farm goods available for in-person purchase during your visit.
 
-# Book Farm Experiences 
+ Book Farm Experiences 
 Reserve spots in guided farm tours, workshops, and seasonal events.
 
-# Connect with Local Farms 
+ Connect with Local Farms 
 Learn about farming practices, meet farmers, and support sustainable agriculture.
 
 ---
