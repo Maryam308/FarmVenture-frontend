@@ -40,18 +40,9 @@ Support local farms. Experience real agriculture.
 
 ---
 
-## User Stories
+## Attributions
 
-
----
-
-## ERD Diagram
-
----
-
-## Assets & Inspiration
-
-Images, videos, and layout inspiration for this project were sourced from [Pinterest](https://www.pinterest.com/), focusing on visual appeal and modern UI.  
+Images, and layout inspiration for this project were sourced from [Pinterest](https://www.pinterest.com/), focusing on visual appeal and modern UI.  
 
 > These assets are used for educational purposes and UI/UX inspiration only. All rights belong to the original creators.
 
@@ -59,8 +50,17 @@ Images, videos, and layout inspiration for this project were sourced from [Pinte
 ---
 
 ## 🧪 Technologies Used
-
+JavaScript - Programming language
+React - Frontend framework
+Vite - Build tool and development server
+React Router DOM - Client-side routing
+CSS - Styling and layout
+Context API - State management
+Cloudinary - Image and media management
 
 ---
 
 ## 🎯 Next Steps / Future Enhancements
+Online Product Orders & Checkout: Add a full shopping cart, checkout process, and order management system for users to purchase products online.
+User Reviews & Ratings: Allow customers to rate and review activities and products.
+Email Notifications: Send automated booking confirmations, order updates, and reminders.
