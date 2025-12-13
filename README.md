@@ -1,4 +1,4 @@
-## FarmVenture-frontend
+# FarmVenture-frontend
 
 ---
 
@@ -9,7 +9,7 @@
 ## Project Title: FarmVenture
 
 
-# Discover -  Experience - Connect
+## Discover -  Experience - Connect
 
 FarmVenture is an agritourism platform designed to bridge local farms with experience-seeking visitors. This web application enables users to explore authentic farm products and seamlessly book hands-on agricultural activities, from seasonal harvest tours to sunrise farm visits and fruit-picking adventures.
 
