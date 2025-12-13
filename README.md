@@ -50,17 +50,17 @@ Images, and layout inspiration for this project were sourced from [Pinterest](ht
 ---
 
 ## 🧪 Technologies Used
-JavaScript - Programming language
-React - Frontend framework
-Vite - Build tool and development server
-React Router DOM - Client-side routing
-CSS - Styling and layout
-Context API - State management
-Cloudinary - Image and media management
-
+- **JavaScript** - Programming language
+- **React** - Frontend framework
+- **Vite** - Build tool and development server
+- **React Router DOM** - Client-side routing
+- **CSS** - Styling and layout
+- **Context API** - State management
+- **Cloudinary** - Image and media management
+  
 ---
 
 ## 🎯 Next Steps / Future Enhancements
-Online Product Orders & Checkout: Add a full shopping cart, checkout process, and order management system for users to purchase products online.
-User Reviews & Ratings: Allow customers to rate and review activities and products.
-Email Notifications: Send automated booking confirmations, order updates, and reminders.
+- **Online Product Orders & Checkout** - Add a full shopping cart, checkout process, and order management system for users to purchase products online.
+- **User Reviews & Ratings** - Allow customers to rate and review activities and products.
+- **Email Notifications** - Send automated booking confirmations, order updates, and reminders.
