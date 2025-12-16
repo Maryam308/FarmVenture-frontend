@@ -1,13 +1,48 @@
+import { Link } from 'react-router-dom';
+import styles from './Dashboard.module.css';
+
 const Dashboard = ({ user }) => {
-    return (
-      <main>
-        <h1>Welcome, {user.username}</h1>
-        <p>
-          This is the dashboard page where you, and only you, can see a dashboard
-          of all of your things.
+  return (
+    <main className={styles.container}>
+      <div className={styles.welcomeSection}>
+        <h1>Welcome back, {user.username}! 👋</h1>
+        <p className={styles.subtitle}>
+          Manage your farm products and connect with customers.
         </p>
-      </main>
-    );
+      </div>
+
+      <div className={styles.quickActions}>
+        <h2>Quick Actions</h2>
+        <div className={styles.actionGrid}>
+          <Link to="/products/new" className={styles.actionCard}>
+            <div className={styles.actionIcon}>➕</div>
+            <h3>Add New Product</h3>
+            <p>List a new farm product for sale</p>
+          </Link>
+          
+          <Link to="/products" className={styles.actionCard}>
+            <div className={styles.actionIcon}>📦</div>
+            <h3>Browse Products</h3>
+            <p>View all available products</p>
+          </Link>
+          
+          <Link to="/profile" className={styles.actionCard}>
+            <div className={styles.actionIcon}>👤</div>
+            <h3>Your Profile</h3>
+            <p>View and manage your account</p>
+          </Link>
+        </div>
+      </div>
+
+      <div className={styles.statsSection}>
+        <h2>FarmVenture Platform</h2>
+        <p className={styles.statsDescription}>
+          Welcome to FarmVenture - your marketplace for fresh farm products. 
+          Connect directly with farmers and customers in your community.
+        </p>
+      </div>
+    </main>
+  );
 };
-    
+
 export default Dashboard;

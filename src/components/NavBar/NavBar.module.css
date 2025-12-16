@@ -1,40 +1,64 @@
+/* src/components/NavBar/NavBar.module.css */
 .container {
-    top: 0; 
-    z-index: 1;
-    width: 100%;
-    height: 80px;
-    display: flex;
-    position: fixed; 
-    padding: 14px 21px;
-    align-items: center;
-    background: white;
-    border-bottom: 1px solid rgb(200, 200, 200);
+  background: #2E7D32;
+  color: white;
+  padding: 1rem 2rem;
 }
-  
-.container img {
-    width: 50px;
+
+.container nav {
+  max-width: 1200px;
+  margin: 0 auto;
 }
-  
+
 .container ul {
-    margin: 0;
-    width: 100%;
-    display: flex;
-    list-style: none;
-    font-weight: bold;
-    align-items: center;
-    justify-content: flex-end;
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  gap: 2rem;
 }
-  
+
 .container li {
-    margin-left: 35px;
-    text-align: right;
+  display: inline;
 }
-  
-@media only screen and (max-width: 414px) {
-    .container ul {
-      padding-left: 0px;
-    }
-    .container li {
-      font-size: 15px;
-    }
+
+.container a {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.container a:hover {
+  opacity: 0.8;
+}
+
+.container img {
+  height: 40px;
+}
+
+/* For non-authenticated users */
+nav:not(.container) {
+  background: #f8f9fa;
+  padding: 1rem 2rem;
+}
+
+nav:not(.container) ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+nav:not(.container) a {
+  color: #2E7D32;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+nav:not(.container) a:hover {
+  text-decoration: underline;
 }
