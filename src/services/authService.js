@@ -1,10 +1,20 @@
 const signup = async (formData) => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
+    const dataToSend = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+    };
+
+    const res = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/register`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataToSend),
+      }
+    );
+
     const json = await res.json();
     if (json.err) {
       throw new Error(json.err);
@@ -13,14 +23,14 @@ const signup = async (formData) => {
   } catch (err) {
     console.log(err);
     throw err;
-  };
+  }
 };
 
 const signin = async (user) => {
   try {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(user),
     });
     const json = await res.json();
@@ -30,8 +40,8 @@ const signin = async (user) => {
     }
 
     if (json.token) {
-      window.localStorage.setItem('token', json.token);
-      const rawPayload = json.token.split('.')[1];
+      window.localStorage.setItem("token", json.token);
+      const rawPayload = json.token.split(".")[1];
       const jsonPayload = window.atob(rawPayload);
       const user = JSON.parse(jsonPayload);
       return user;
@@ -42,19 +52,19 @@ const signin = async (user) => {
   }
 };
 
-const getUser = () =>  {
+const getUser = () => {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return null;
-    const user = JSON.parse(atob(token.split('.')[1]));
+    const user = JSON.parse(atob(token.split(".")[1]));
     return user;
   } catch (error) {
     return null;
-  };
+  }
 };
 
 const signout = () => {
-  localStorage.removeItem('token');
+  localStorage.removeItem("token");
 };
 
 export { signup, signin, getUser, signout };
