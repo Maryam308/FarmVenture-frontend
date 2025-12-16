@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';  
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import * as productService from '../../services/productService';
 import styles from './ProductForm.module.css';
 
@@ -12,15 +12,16 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
     description: '',
     price: '',
     category: 'fruits',
-    image_url: ''
+    image_url: '',
+    is_active: true
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const categories = [
-    'fruits', 'vegetables', 'dairy', 'meat', 'grains', 'other'
-  ];
+  const categories = ['fruits', 'vegetables', 'dairy', 'meat', 'grains', 'other'];
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -31,29 +32,78 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
     setError('');
   };
 
+  const handleImageSelect = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file (JPG, PNG, GIF)');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB');
+      return;
+    }
+    
+    setUploading(true);
+    setError('');
+    
+    try {
+      // Upload image first
+      const imageUrl = await productService.uploadImage(file);
+      
+      // Update form with image URL
+      setFormData(prev => ({ ...prev, image_url: imageUrl }));
+      setImageFile(file);
+      
+    } catch (err) {
+      setError('Failed to upload image: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData(prev => ({ ...prev, image_url: '' }));
+    setImageFile(null);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // Prepare data for submission
+      // Prepare data
       const submitData = {
-        ...formData,
-        price: parseFloat(formData.price)
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        image_url: formData.image_url || null,
+        is_active: formData.is_active
       };
 
+      console.log('Submitting data:', submitData);
+
       if (productId) {
-        // Update existing product
+        // For editing, send all data including is_active
         await handleUpdateProduct(productId, submitData);
+        console.log('Update successful, navigating to products list...');
+        navigate('/products'); // Navigate to products list
       } else {
-        // Create new product
-        await handleAddProduct(submitData);
+        // For creating new product, don't send is_active (backend sets to true by default)
+        const { is_active, ...createData } = submitData;
+        console.log('Creating product with data:', createData);
+        await handleAddProduct(createData);
+        // navigate('/products'); is already handled in handleAddProduct
       }
       
-      navigate('/products');
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(err.message || 'Failed to save product. Please try again.');
+      console.error('Save error:', err);
     } finally {
       setLoading(false);
     }
@@ -65,15 +115,18 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
         try {
           setLoading(true);
           const productData = await productService.getProduct(productId);
+          console.log('Fetched product data:', productData);
           setFormData({
             name: productData.name,
             description: productData.description,
             price: productData.price.toString(),
             category: productData.category,
-            image_url: productData.image_url || ''
+            image_url: productData.image_url || '',
+            is_active: productData.is_active
           });
         } catch (err) {
-          setError('Failed to load product for editing');
+          setError('Failed to load product');
+          console.error('Fetch error:', err);
         } finally {
           setLoading(false);
         }
@@ -83,10 +136,6 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
     fetchProduct();
   }, [productId]);
 
-  if (loading && productId) {
-    return <div>Loading product data...</div>;
-  }
-
   return (
     <main className={styles.container}>
       <form onSubmit={handleSubmit} className={styles.form}>
@@ -94,6 +143,49 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
         
         {error && <div className={styles.error}>{error}</div>}
         
+        {/* Image Upload Section */}
+        <div className={styles.formGroup}>
+          <label htmlFor="image">Product Image (Optional)</label>
+          
+          <div className={styles.imageSection}>
+            {formData.image_url ? (
+              <div className={styles.imagePreview}>
+                <img src={formData.image_url} alt="Preview" />
+                <div className={styles.imageActions}>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className={styles.removeImage}
+                  >
+                    Remove Image
+                  </button>
+                  <p className={styles.imageUrl}>
+                    Image URL: {formData.image_url.substring(0, 50)}...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.imageUpload}>
+                <input
+                  type="file"
+                  id="image"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className={styles.fileInput}
+                  disabled={uploading}
+                />
+                <label htmlFor="image" className={styles.uploadButton}>
+                  {uploading ? 'Uploading...' : 'Choose Image'}
+                </label>
+                <p className={styles.uploadHint}>
+                  JPG, PNG, GIF • Max 5MB • Optional
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Product Name */}
         <div className={styles.formGroup}>
           <label htmlFor="name">Product Name *</label>
           <input
@@ -109,6 +201,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
           />
         </div>
 
+        {/* Description */}
         <div className={styles.formGroup}>
           <label htmlFor="description">Description *</label>
           <textarea
@@ -123,6 +216,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
           />
         </div>
 
+        {/* Price and Category */}
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label htmlFor="price">Price ($) *</label>
@@ -135,7 +229,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
               required
               min="0.01"
               step="0.01"
-              placeholder="0.00"
+              placeholder="4.99"
             />
           </div>
 
@@ -157,26 +251,52 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
           </div>
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="image_url">Image URL (Optional)</label>
-          <input
-            type="url"
-            id="image_url"
-            name="image_url"
-            value={formData.image_url}
-            onChange={handleChange}
-            placeholder="https://example.com/image.jpg"
-          />
-          <small>Add a link to your product image</small>
-        </div>
+        {/* Active/Inactive Radio Buttons (Only for editing) */}
+        {productId && (
+          <div className={styles.formGroup}>
+            <label>Product Status *</label>
+            <div className={styles.radioGroup}>
+              <label className={`${styles.radioLabel} ${formData.is_active ? styles.active : ''}`}>
+                <input
+                  type="radio"
+                  name="is_active"
+                  value="true"
+                  checked={formData.is_active === true}
+                  onChange={() => setFormData(prev => ({ ...prev, is_active: true }))}
+                />
+                <span className={styles.radioText}>
+                  <span className={styles.statusDot}></span>
+                  Active (Visible to customers)
+                </span>
+              </label>
+              <label className={`${styles.radioLabel} ${formData.is_active === false ? styles.inactive : ''}`}>
+                <input
+                  type="radio"
+                  name="is_active"
+                  value="false"
+                  checked={formData.is_active === false}
+                  onChange={() => setFormData(prev => ({ ...prev, is_active: false }))}
+                />
+                <span className={styles.radioText}>
+                  <span className={styles.statusDot}></span>
+                  Inactive (Hidden from customers)
+                </span>
+              </label>
+            </div>
+            <p className={styles.radioHelp}>
+              Note: Inactive products are hidden by default but can be shown using the filter.
+            </p>
+          </div>
+        )}
 
+        {/* Buttons */}
         <div className={styles.buttonGroup}>
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || uploading}
             className={styles.submitButton}
           >
-            {loading ? 'Processing...' : (productId ? 'Update Product' : 'Add Product')}
+            {loading ? 'Saving...' : (productId ? 'Update Product' : 'Add Product')}
           </button>
           <button 
             type="button" 
