@@ -270,3 +270,42 @@
 .cancelButton:hover {
   background: #e0e0e0;
 }
+
+/* Radio Help Text */
+.radioHelp {
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Update existing radio styles for better visibility */
+.radioLabel.active {
+  border-color: #4CAF50;
+  background: #f1f8e9;
+  box-shadow: 0 0 0 1px #4CAF50;
+}
+
+.radioLabel.inactive {
+  border-color: #f44336;
+  background: #ffebee;
+  box-shadow: 0 0 0 1px #f44336;
+}
+
+/* Add to existing ProductDetails.module.css */
+.adminDeleteButton {
+  background: #d32f2f;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-size: 0.875rem;
+}
+
+.adminDeleteButton:hover {
+  opacity: 0.9;
+}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';  
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import * as productService from '../../services/productService';
 import styles from './ProductForm.module.css';
 
@@ -30,13 +30,6 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
       [name]: name === 'price' ? parseFloat(value) || '' : value
     }));
     setError('');
-  };
-
-  const handleRadioChange = (event) => {
-    setFormData(prev => ({
-      ...prev,
-      is_active: event.target.value === 'true'
-    }));
   };
 
   const handleImageSelect = async (event) => {
@@ -85,24 +78,32 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
     try {
       // Prepare data
       const submitData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
         price: parseFloat(formData.price),
+        category: formData.category,
+        image_url: formData.image_url || null,
         is_active: formData.is_active
       };
 
+      console.log('Submitting data:', submitData);
+
       if (productId) {
-        // For editing, send is_active field
+        // For editing, send all data including is_active
         await handleUpdateProduct(productId, submitData);
+        console.log('Update successful, navigating to products list...');
+        navigate('/products'); // Navigate to products list
       } else {
         // For creating new product, don't send is_active (backend sets to true by default)
         const { is_active, ...createData } = submitData;
+        console.log('Creating product with data:', createData);
         await handleAddProduct(createData);
+        // navigate('/products'); is already handled in handleAddProduct
       }
       
-      navigate('/products');
-      
     } catch (err) {
-      setError(err.message || 'Failed to save product');
+      setError(err.message || 'Failed to save product. Please try again.');
+      console.error('Save error:', err);
     } finally {
       setLoading(false);
     }
@@ -114,6 +115,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
         try {
           setLoading(true);
           const productData = await productService.getProduct(productId);
+          console.log('Fetched product data:', productData);
           setFormData({
             name: productData.name,
             description: productData.description,
@@ -124,6 +126,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
           });
         } catch (err) {
           setError('Failed to load product');
+          console.error('Fetch error:', err);
         } finally {
           setLoading(false);
         }
@@ -251,7 +254,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
         {/* Active/Inactive Radio Buttons (Only for editing) */}
         {productId && (
           <div className={styles.formGroup}>
-            <label>Product Status</label>
+            <label>Product Status *</label>
             <div className={styles.radioGroup}>
               <label className={`${styles.radioLabel} ${formData.is_active ? styles.active : ''}`}>
                 <input
@@ -259,20 +262,20 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
                   name="is_active"
                   value="true"
                   checked={formData.is_active === true}
-                  onChange={handleRadioChange}
+                  onChange={() => setFormData(prev => ({ ...prev, is_active: true }))}
                 />
                 <span className={styles.radioText}>
                   <span className={styles.statusDot}></span>
                   Active (Visible to customers)
                 </span>
               </label>
-              <label className={`${styles.radioLabel} ${!formData.is_active ? styles.inactive : ''}`}>
+              <label className={`${styles.radioLabel} ${formData.is_active === false ? styles.inactive : ''}`}>
                 <input
                   type="radio"
                   name="is_active"
                   value="false"
                   checked={formData.is_active === false}
-                  onChange={handleRadioChange}
+                  onChange={() => setFormData(prev => ({ ...prev, is_active: false }))}
                 />
                 <span className={styles.radioText}>
                   <span className={styles.statusDot}></span>
@@ -280,6 +283,9 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
                 </span>
               </label>
             </div>
+            <p className={styles.radioHelp}>
+              Note: Inactive products are hidden by default but can be shown using the filter.
+            </p>
           </div>
         )}
 
