@@ -3,7 +3,6 @@ const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/products`;
 // Get all products (public - no auth required)
 const getAllProducts = async (params = {}) => {
   try {
-    // Build query string from params
     const queryParams = new URLSearchParams(params).toString();
     const url = queryParams ? `${BASE_URL}?${queryParams}` : BASE_URL;
     
@@ -32,7 +31,39 @@ const getProduct = async (productId) => {
   }
 };
 
-// Create product (requires auth)
+// Upload image to Cloudinary
+const uploadImage = async (file) => {
+  try {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_URL}/api/products/upload-image`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData
+      }
+    );
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to upload image');
+    }
+    
+    const data = await response.json();
+    return data.url;
+    
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+};
+
+// Create product
 const createProduct = async (productData) => {
   try {
     const token = localStorage.getItem('token');
@@ -47,7 +78,7 @@ const createProduct = async (productData) => {
     
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(error.detail || `HTTP error! status: ${res.status}`);
+      throw new Error(error.detail || 'Failed to create product');
     }
     
     return res.json();
@@ -57,7 +88,7 @@ const createProduct = async (productData) => {
   }
 };
 
-// Update product (requires auth - owner or admin)
+// Update product
 const updateProduct = async (productId, productData) => {
   try {
     const token = localStorage.getItem('token');
@@ -72,7 +103,7 @@ const updateProduct = async (productId, productData) => {
     
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(error.detail || `HTTP error! status: ${res.status}`);
+      throw new Error(error.detail || 'Failed to update product');
     }
     
     return res.json();
@@ -82,7 +113,7 @@ const updateProduct = async (productId, productData) => {
   }
 };
 
-// Delete product (soft delete - requires auth)
+// DELETE product (HARD DELETE - permanent)
 const deleteProduct = async (productId) => {
   try {
     const token = localStorage.getItem('token');
@@ -95,7 +126,7 @@ const deleteProduct = async (productId) => {
     
     if (!res.ok) {
       const error = await res.json();
-      throw new Error(error.detail || `HTTP error! status: ${res.status}`);
+      throw new Error(error.detail || 'Failed to delete product');
     }
     
     return res.json();
@@ -122,6 +153,7 @@ const getUserProducts = async (userId) => {
 export { 
   getAllProducts, 
   getProduct, 
+  uploadImage,
   createProduct, 
   updateProduct, 
   deleteProduct,

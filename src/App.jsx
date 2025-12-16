@@ -38,7 +38,6 @@ const App = () => {
     try {
       await productService.deleteProduct(productId);
       setProducts(products.filter((product) => product.id !== productId));
-      navigate('/products');
     } catch (error) {
       console.error('Error deleting product:', error);
     }
