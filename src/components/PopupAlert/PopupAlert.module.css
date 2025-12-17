@@ -1,0 +1,175 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  padding: 20px;
+}
+
+.overlay.visible {
+  opacity: 1;
+}
+
+.popup {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.popupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #666;
+}
+
+.popupContent {
+  padding: 20px;
+  flex-grow: 1;
+}
+
+.message {
+  margin: 0;
+  line-height: 1.5;
+  color: #555;
+  font-size: 16px;
+}
+
+.popupActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 15px 20px 20px;
+  border-top: 1px solid #eee;
+}
+
+.button {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.cancelButton {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.cancelButton:hover {
+  background-color: #e8e8e8;
+}
+
+.confirmButton {
+  background-color: #007bff;
+  color: white;
+}
+
+.confirmButton:hover {
+  background-color: #0056b3;
+}
+
+/* Type-specific styles */
+.popup.info .confirmButton {
+  background-color: #007bff;
+}
+
+.popup.warning .confirmButton {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.popup.warning .confirmButton:hover {
+  background-color: #e0a800;
+}
+
+.popup.error .confirmButton {
+  background-color: #dc3545;
+}
+
+.popup.error .confirmButton:hover {
+  background-color: #c82333;
+}
+
+.popup.success .confirmButton {
+  background-color: #28a745;
+}
+
+.popup.success .confirmButton:hover {
+  background-color: #218838;
+}
+
+/* For warning dialogs (destructive actions) */
+.popup.warning {
+  border-top: 4px solid #ffc107;
+}
+
+.popup.error {
+  border-top: 4px solid #dc3545;
+}
+
+.popup.success {
+  border-top: 4px solid #28a745;
+}
+
+.popup.info {
+  border-top: 4px solid #007bff;
+}

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import styles from "./ActivityList.module.css";
 import * as activityService from "../../services/activitiesService";
 import * as bookingService from "../../services/bookingService";
+import PopupAlert from "../PopupAlert/PopupAlert";
 const ActivityList = ({
   user,
   activities: initialActivities = [],
@@ -18,6 +19,11 @@ const ActivityList = ({
   const [sortBy, setSortBy] = useState("date");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
 
   const categories = useMemo(() => {
@@ -30,63 +36,81 @@ const ActivityList = ({
     return ["all", ...Array.from(uniqueCategories).sort()];
   }, [activities]);
 
-  useEffect(() => {
-    const fetchUserBookings = async () => {
-      if (user && user.role !== "admin") {
-        try {
-          const bookings = await bookingService.getAllForUser();
-          setUserBookings(bookings);
-        } catch (error) {
-          console.error("Error fetching user bookings:", error);
-        }
+  // Fetch user bookings
+  const fetchUserBookings = async () => {
+    if (user && user.role !== "admin") {
+      try {
+        const bookings = await bookingService.getMyBookings();
+        setUserBookings(bookings);
+      } catch (error) {
+        console.error("Error fetching user bookings:", error);
       }
-    };
+    }
+  };
 
-    fetchUserBookings();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      if (user?.role === "admin") {
-        try {
-          setLoading(true);
-          const allActivities = await activityService.getAllActivitiesAdmin();
-          setLocalActivities(allActivities);
-          if (setActivities) setActivities(allActivities);
-        } catch (error) {
-          console.error("Error fetching admin activities:", error);
-        } finally {
-          setLoading(false);
-        }
-      } else if (!initialActivities.length) {
-        try {
-          setLoading(true);
-          const publicActivities = await activityService.index(true);
-          setLocalActivities(publicActivities);
-          if (setActivities) setActivities(publicActivities);
-        } catch (error) {
-          console.error("Error fetching public activities:", error);
-        } finally {
-          setLoading(false);
-        }
+  // Fetch activities
+  const fetchActivities = async () => {
+    if (user?.role === "admin") {
+      try {
+        setLoading(true);
+        const allActivities = await activityService.getAllActivitiesAdmin();
+        setLocalActivities(allActivities);
+        if (setActivities) setActivities(allActivities);
+      } catch (error) {
+        console.error("Error fetching admin activities:", error);
+      } finally {
+        setLoading(false);
       }
-    };
+    } else if (!initialActivities.length) {
+      try {
+        setLoading(true);
+        const publicActivities = await activityService.index(true);
+        setLocalActivities(publicActivities);
+        if (setActivities) setActivities(publicActivities);
+      } catch (error) {
+        console.error("Error fetching public activities:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
+  // Initial fetch
+  useEffect(() => {
     fetchActivities();
+    fetchUserBookings();
   }, [user, initialActivities.length, setActivities]);
+
+  // Listen for booking events
+  useEffect(() => {
+    const handleBookingEvent = () => {
+      fetchUserBookings();
+      fetchActivities(); // Refresh activities to update capacity
+    };
+
+    window.addEventListener("bookingCreated", handleBookingEvent);
+    window.addEventListener("bookingCancelled", handleBookingEvent);
+
+    return () => {
+      window.removeEventListener("bookingCreated", handleBookingEvent);
+      window.removeEventListener("bookingCancelled", handleBookingEvent);
+    };
+  }, [user]);
 
   // Check if user has booked a specific activity
   const hasUserBookedActivity = (activityId) => {
     if (!user || user.role === "admin") return false;
-    return userBookings.some((booking) => booking.activity_id === activityId);
+    return userBookings.some(
+      (booking) =>
+        booking.activity_id === activityId && booking.status !== "past"
+    );
   };
 
-  // Format price with 2 decimal places
+  // Format functions
   const formatPrice = (price) => {
     return `BHD${parseFloat(price).toFixed(2)}`;
   };
 
-  // Format duration to hours/minutes
   const formatDuration = (minutes) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -96,7 +120,6 @@ const ActivityList = ({
       : `${hours}h`;
   };
 
-  // Format date for display
   const formatDate = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleDateString("en-US", {
@@ -107,7 +130,6 @@ const ActivityList = ({
     });
   };
 
-  // Format time for display
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString("en-US", {
@@ -116,66 +138,49 @@ const ActivityList = ({
     });
   };
 
-  useEffect(() => {
-    const handleBookingCreated = () => {
-      // Refetch user bookings when a booking is created
-      const fetchUserBookings = async () => {
-        if (user && user.role !== "admin") {
-          try {
-            const bookings = await bookingService.getAllForUser();
-            setUserBookings(bookings);
-          } catch (error) {
-            console.error("Error fetching user bookings:", error);
-          }
-        }
-      };
+  const handleDeleteClick = (activityId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-      fetchUserBookings();
-    };
+    setSelectedActivityId(activityId);
+    setPopupMessage(
+      "WARNING: This will PERMANENTLY DELETE the activity from the database. This action cannot be undone. Are you sure?"
+    );
+    setShowDeletePopup(true);
+  };
 
-    // Listen for bookingCreated events
-    window.addEventListener("bookingCreated", handleBookingCreated);
-
-    return () => {
-      window.removeEventListener("bookingCreated", handleBookingCreated);
-    };
-  }, [user, activities]);
-  const handleDelete = async (activityId, e) => {
-    e.preventDefault(); // Prevent link navigation
-    e.stopPropagation(); // Prevent card click
-
-    if (
-      !window.confirm(
-        "WARNING: This will PERMANENTLY DELETE the activity from the database. This action cannot be undone. Are you sure?"
-      )
-    ) {
-      return;
-    }
+  const handleDeleteConfirm = async () => {
+    if (!selectedActivityId) return;
 
     try {
-      await activityService.remove(activityId);
-      setLocalActivities((prev) => prev.filter((a) => a.id !== activityId));
+      await activityService.remove(selectedActivityId);
+      setLocalActivities((prev) =>
+        prev.filter((a) => a.id !== selectedActivityId)
+      );
       if (setActivities) {
-        setActivities((prev) => prev.filter((a) => a.id !== activityId));
+        setActivities((prev) =>
+          prev.filter((a) => a.id !== selectedActivityId)
+        );
       }
     } catch (error) {
       console.error("Error deleting activity:", error);
       const errorMessage = error.message || "Unknown error occurred";
-      alert(`Failed to delete activity: ${errorMessage}`);
+      setErrorMessage(`Failed to delete activity: ${errorMessage}`);
+      setShowErrorPopup(true);
     }
+
+    setSelectedActivityId(null);
   };
 
   const filteredActivities = useMemo(() => {
     let filtered = [...activities];
 
-    // Filter by status
     if (statusFilter === "upcoming") {
       filtered = filtered.filter((a) => new Date(a.date_time) > new Date());
     } else if (statusFilter === "past") {
       filtered = filtered.filter((a) => new Date(a.date_time) <= new Date());
     }
 
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(
@@ -186,7 +191,6 @@ const ActivityList = ({
       );
     }
 
-    // Apply category filter
     if (categoryFilter !== "all") {
       filtered = filtered.filter(
         (activity) =>
@@ -195,7 +199,6 @@ const ActivityList = ({
       );
     }
 
-    // Apply sorting
     switch (sortBy) {
       case "date":
         filtered.sort((a, b) => new Date(a.date_time) - new Date(b.date_time));
@@ -220,7 +223,7 @@ const ActivityList = ({
     }
 
     return filtered;
-  }, [activities, user, statusFilter, searchQuery, categoryFilter, sortBy]);
+  }, [activities, statusFilter, searchQuery, categoryFilter, sortBy]);
 
   const totalPages = Math.ceil(filteredActivities.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -231,14 +234,12 @@ const ActivityList = ({
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, sortBy, statusFilter]);
 
-  // Calculate stats
   const upcomingCount = activities.filter(
     (a) => new Date(a.date_time) > new Date()
   ).length;
   const pastCount = activities.filter(
     (a) => new Date(a.date_time) <= new Date()
   ).length;
-
   const totalCount = activities.length;
 
   const handlePageChange = (page) => {
@@ -294,6 +295,27 @@ const ActivityList = ({
 
   return (
     <main className={styles.container}>
+      <PopupAlert
+        isOpen={showDeletePopup}
+        onClose={() => setShowDeletePopup(false)}
+        title="Delete Activity"
+        message={popupMessage}
+        type="warning"
+        confirmText="Delete"
+        cancelText="Cancel"
+        showCancel={true}
+        onConfirm={handleDeleteConfirm}
+      />
+
+      <PopupAlert
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title="Error"
+        message={errorMessage}
+        type="error"
+        confirmText="OK"
+        showCancel={false}
+      />
       <div className={styles.headerSection}>
         <div className={styles.titleRow}>
           <h1>Farm Activities</h1>
@@ -307,7 +329,6 @@ const ActivityList = ({
         <div className={styles.stats}>
           <span className={styles.statUpcoming}>{upcomingCount} Upcoming</span>
           <span className={styles.statPast}>{pastCount} Past</span>
-
           <span className={styles.statTotal}>{totalCount} Total</span>
           {searchQuery && (
             <span className={styles.searchResults}>
@@ -392,8 +413,6 @@ const ActivityList = ({
               ? "No upcoming activities available"
               : statusFilter === "past"
               ? "No past activities found"
-              : user?.role === "admin" && statusFilter !== "all"
-              ? `No ${statusFilter} activities found`
               : "No activities available."}
           </p>
           <div className={styles.emptyStateButtonGroup}>
@@ -468,19 +487,16 @@ const ActivityList = ({
                             </div>
                           )}
 
-                          {/* Status badges */}
                           {isUpcoming ? (
                             <div className={styles.upcomingBadge}>UPCOMING</div>
                           ) : (
                             <div className={styles.pastBadge}>PAST</div>
                           )}
 
-                          {/* Booked badge */}
                           {hasBooked && isUpcoming && (
                             <div className={styles.bookedBadge}>BOOKED</div>
                           )}
 
-                          {/* Capacity indicator */}
                           {isSoldOut && (
                             <div className={styles.soldOutBadge}>SOLD OUT</div>
                           )}
@@ -555,7 +571,6 @@ const ActivityList = ({
                       </article>
                     </Link>
 
-                    {/* Admin actions inside the card */}
                     {user?.role === "admin" && (
                       <div className={styles.adminActions}>
                         <Link
@@ -567,7 +582,7 @@ const ActivityList = ({
                         </Link>
 
                         <button
-                          onClick={(e) => handleDelete(activity.id, e)}
+                          onClick={(e) => handleDeleteClick(activity.id, e)}
                           className={styles.deleteBtn}
                         >
                           Delete
@@ -575,14 +590,17 @@ const ActivityList = ({
                       </div>
                     )}
 
-                    {/* Book button for customers */}
-                    {user?.role !== "admin" && isUpcoming && !isSoldOut && (
+                    {user?.role !== "admin" && isUpcoming && (
                       <div className={styles.bookingAction}>
                         {hasBooked ? (
-                          <div className={styles.bookedButton}>
+                          <button className={styles.bookedButton} disabled>
                             <span className={styles.bookedIcon}>✓</span>
-                            Booked
-                          </div>
+                            Already Booked
+                          </button>
+                        ) : isSoldOut ? (
+                          <button className={styles.soldOutButton} disabled>
+                            Sold Out
+                          </button>
                         ) : (
                           <Link
                             to={`/activities/${activity.id}/book`}

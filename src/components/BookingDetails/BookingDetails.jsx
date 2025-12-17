@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as bookingService from "../../services/bookingService";
 import styles from "./BookingDetails.module.css";
+import PopupAlert from "../PopupAlert/PopupAlert";
 
 const BookingDetails = ({ user }) => {
   const { bookingId } = useParams();
@@ -11,6 +12,10 @@ const BookingDetails = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelPopup, setShowCancelPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -29,19 +34,28 @@ const BookingDetails = ({ user }) => {
     fetchBooking();
   }, [bookingId]);
 
-  const handleCancelBooking = async () => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) {
-      return;
-    }
+  const handleCancelBookingClick = () => {
+    setPopupMessage("Are you sure you want to cancel this booking?");
+    setShowCancelPopup(true);
+  };
 
+  const handleCancelBookingConfirm = async () => {
     try {
       setCancelling(true);
       await bookingService.cancelBooking(bookingId);
-      alert("Booking cancelled successfully!");
-      navigate("/profile");
+      setPopupMessage("Booking cancelled successfully!");
+      setShowSuccessPopup(true);
+
+      // Navigate after success popup
+      setTimeout(() => {
+        navigate("/profile");
+      }, 2000);
     } catch (err) {
       console.error("Error cancelling booking:", err);
-      alert(err.message || "Failed to cancel booking");
+      setPopupMessage(
+        err.message || "Failed to cancel booking. Please try again."
+      );
+      setShowErrorPopup(true);
     } finally {
       setCancelling(false);
     }
@@ -95,6 +109,39 @@ const BookingDetails = ({ user }) => {
   if (error || !booking) {
     return (
       <main className={styles.container}>
+        <PopupAlert
+          isOpen={showCancelPopup}
+          onClose={() => setShowCancelPopup(false)}
+          title="Cancel Booking"
+          message={popupMessage}
+          type="warning"
+          confirmText="Yes, Cancel"
+          cancelText="No, Keep Booking"
+          showCancel={true}
+          onConfirm={handleCancelBookingConfirm}
+        />
+
+        <PopupAlert
+          isOpen={showSuccessPopup}
+          onClose={() => setShowSuccessPopup(false)}
+          title="Success"
+          message={popupMessage}
+          type="success"
+          confirmText="OK"
+          showCancel={false}
+          autoClose={true}
+          autoCloseTime={2000}
+        />
+
+        <PopupAlert
+          isOpen={showErrorPopup}
+          onClose={() => setShowErrorPopup(false)}
+          title="Error"
+          message={popupMessage}
+          type="error"
+          confirmText="OK"
+          showCancel={false}
+        />
         <div className={styles.error}>
           <h2>Booking Not Found</h2>
           <p>{error || "This booking could not be found"}</p>
@@ -250,7 +297,7 @@ const BookingDetails = ({ user }) => {
 
             {canCancelBooking() && (
               <button
-                onClick={handleCancelBooking}
+                onClick={handleCancelBookingClick}
                 disabled={cancelling}
                 className={styles.cancelButton}
               >

@@ -91,6 +91,35 @@ const getMyBookings = async (statusFilter = null) => {
     throw error;
   }
 };
+const getAllForUser = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("Please log in to view bookings");
+    }
+
+    const res = await fetch(`${BASE_URL}/my`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = await res
+        .json()
+        .catch(() => ({ detail: "Failed to fetch bookings" }));
+      throw new Error(
+        errorData.detail || `HTTP ${res.status}: Failed to fetch bookings`
+      );
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    throw error;
+  }
+};
 
 // Get all bookings (ADMIN ONLY)
 const getAllBookingsAdmin = async (filters = {}) => {
@@ -351,4 +380,5 @@ export {
   checkBookingAvailability,
   formatBookingStatus,
   calculateBookingTotal,
+  getAllForUser,
 };
