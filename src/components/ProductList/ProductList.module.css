@@ -615,6 +615,69 @@
   font-weight: 600;
 }
 
+/* Add these styles to the existing ProductList.module.css file */
+
+/* Favorite Button Styles */
+.favoriteBtn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.favoriteBtn:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.favoriteBtn.favorited {
+  background: rgba(255, 255, 255, 1);
+  animation: heartBeat 0.3s ease;
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.favoriteBtn:active {
+  transform: scale(0.95);
+}
+
+/* Adjust image container to accommodate favorite button */
+.imageContainer {
+  position: relative;
+}
+
+/* Update inactive badge position to not overlap with favorite button */
+.inactiveBadge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .grid {
