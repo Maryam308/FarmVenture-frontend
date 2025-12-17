@@ -382,54 +382,6 @@ const ActivityList = ({
             </div>
           </div>
         </div>
-
-        <div className={styles.filterControls}>
-          <div className={styles.statusFilters}>
-            <button
-              className={`${styles.statusFilterBtn} ${
-                statusFilter === "upcoming" ? styles.active : ""
-              }`}
-              onClick={() => setStatusFilter("upcoming")}
-            >
-              Upcoming
-            </button>
-            <button
-              className={`${styles.statusFilterBtn} ${
-                statusFilter === "past" ? styles.active : ""
-              }`}
-              onClick={() => setStatusFilter("past")}
-            >
-              Past Events
-            </button>
-            {user?.role === "admin" && (
-              <>
-                <button
-                  className={`${styles.statusFilterBtn} ${
-                    statusFilter === "all" ? styles.active : ""
-                  }`}
-                  onClick={() => setStatusFilter("all")}
-                >
-                  All
-                </button>
-                <div className={styles.adminFilterGroup}>
-                  <label htmlFor="statusFilter">Status:</label>
-                  <select
-                    id="statusFilter"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className={styles.filterSelect}
-                  >
-                    <option value="upcoming">Upcoming Events</option>
-                    <option value="past">Past Events</option>
-                    <option value="active">Active Only</option>
-                    <option value="inactive">Inactive Only</option>
-                    <option value="all">All Activities</option>
-                  </select>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
       </div>
 
       {filteredActivities.length === 0 ? (
