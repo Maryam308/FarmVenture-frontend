@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import styles from './Landing.module.css';
+import { Link } from "react-router-dom";
+import styles from "./Landing.module.css";
 
 const Landing = () => {
   return (
@@ -16,6 +16,9 @@ const Landing = () => {
           <Link to="/products" className={styles.secondaryButton}>
             Browse Products
           </Link>
+          <Link to="/activities" className={styles.secondaryButton}>
+            Browse Activities
+          </Link>
         </div>
       </section>
 
@@ -27,17 +30,21 @@ const Landing = () => {
             <h3>Direct from Farm</h3>
             <p>Connect directly with local farmers for the freshest produce.</p>
           </div>
-          
+
           <div className={styles.featureCard}>
             <div className={styles.featureIcon}>💰</div>
             <h3>Fair Prices</h3>
-            <p>Better prices for both farmers and customers without middlemen.</p>
+            <p>
+              Better prices for both farmers and customers without middlemen.
+            </p>
           </div>
-          
+
           <div className={styles.featureCard}>
             <div className={styles.featureIcon}>🤝</div>
             <h3>Community Focused</h3>
-            <p>Support your local farming community and sustainable agriculture.</p>
+            <p>
+              Support your local farming community and sustainable agriculture.
+            </p>
           </div>
         </div>
       </section>

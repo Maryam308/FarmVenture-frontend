@@ -1,5 +1,4 @@
 const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/activities`;
-
 // Get all activities (public - no auth needed for GET)
 const index = async (upcomingOnly = true, search = null) => {
   try {
@@ -12,9 +11,33 @@ const index = async (upcomingOnly = true, search = null) => {
     const url = queryString ? `${BASE_URL}?${queryString}` : BASE_URL;
 
     const res = await fetch(url);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch activities");
+    }
     return res.json();
   } catch (error) {
     console.error("Error fetching activities:", error);
+    throw error;
+  }
+};
+
+const getAllForUser = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch user bookings");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
     throw error;
   }
 };
@@ -82,7 +105,6 @@ const update = async (activityId, activityFormData) => {
   }
 };
 
-// Delete/Deactivate activity (ADMIN ONLY - soft delete)
 const remove = async (activityId) => {
   try {
     const res = await fetch(`${BASE_URL}/${activityId}`, {
@@ -104,7 +126,7 @@ const remove = async (activityId) => {
   }
 };
 
-// Toggle activity status active/inactive (ADMIN ONLY)
+// Toggle status (activate/deactivate) - uses PATCH /activities/{id}/toggle
 const toggleStatus = async (activityId) => {
   try {
     const res = await fetch(`${BASE_URL}/${activityId}/toggle`, {
@@ -125,5 +147,62 @@ const toggleStatus = async (activityId) => {
     throw error;
   }
 };
+// Get all activities for admin (ADMIN ONLY - requires token)
+const getAllActivitiesAdmin = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/admin/all`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-export { index, show, create, update, remove, toggleStatus };
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch admin activities");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching admin activities:", error);
+    throw error;
+  }
+};
+
+// Upload image (ADMIN ONLY - requires token)
+const uploadImage = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${BASE_URL}/upload-image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to upload image");
+    }
+
+    const data = await res.json();
+    return data.image_url;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
+
+export {
+  index,
+  show,
+  create,
+  update,
+  remove,
+  toggleStatus,
+  getAllActivitiesAdmin,
+  uploadImage,
+  getAllForUser,
+};

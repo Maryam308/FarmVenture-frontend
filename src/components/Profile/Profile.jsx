@@ -41,7 +41,7 @@ const Profile = ({ user }) => {
           // Admin: fetch products
           console.log('Profile: Fetching all products for admin');
           const allProducts = await productService.getAllProductsAdmin(true);
-          console.log('Profile: Admin products fetched:', allProducts.length);
+          console.log("Profile: Admin products fetched:", allProducts.length);
           setUserProducts(allProducts);
         } else if (user.role === 'customer') {
           // Customer: fetch favorites
@@ -82,7 +82,7 @@ const Profile = ({ user }) => {
         console.error('Error fetching profile data:', error);
         setError(error.message || 'Failed to load profile data');
       } finally {
-        console.log('Profile: Setting loading to false');
+        console.log("Profile: Setting loading to false");
         setLoading(false);
       }
     };
@@ -127,14 +127,20 @@ const Profile = ({ user }) => {
       }
     };
 
-    window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
-    window.addEventListener('storage', handleFavoriteUpdate);
+    window.addEventListener("favoriteUpdated", handleFavoriteUpdate);
+    window.addEventListener("storage", handleFavoriteUpdate);
 
     return () => {
-      window.removeEventListener('favoriteUpdated', handleFavoriteUpdate);
-      window.removeEventListener('storage', handleFavoriteUpdate);
+      window.removeEventListener("favoriteUpdated", handleFavoriteUpdate);
+      window.removeEventListener("storage", handleFavoriteUpdate);
     };
   }, [user?.sub, user?.role]);
+
+  // Filter bookings based on status
+  const filteredBookings = bookings.filter((booking) => {
+    if (bookingStatusFilter === "all") return true;
+    return booking.status === bookingStatusFilter;
+  });
 
   // Filter products based on selected filter (admin only)
   const filteredProducts = userProducts.filter(product => {
@@ -169,8 +175,27 @@ const Profile = ({ user }) => {
       localStorage.setItem('favorites_updated', Date.now().toString());
       window.dispatchEvent(new Event('favoriteUpdated'));
     } catch (error) {
-      console.error('Error toggling favorite from profile:', error);
+      console.error("Error toggling favorite from profile:", error);
     }
+  };
+
+  // Format booking status for display
+  const formatBookingStatus = (status) => {
+    const statusMap = {
+      upcoming: { text: "Upcoming", className: styles.upcoming },
+      today: { text: "Today", className: styles.today },
+      past: { text: "Past", className: styles.past },
+    };
+
+    const statusInfo = statusMap[status] || {
+      text: status,
+      className: styles.default,
+    };
+    return (
+      <span className={`${styles.statusBadge} ${statusInfo.className}`}>
+        {statusInfo.text}
+      </span>
+    );
   };
 
   if (!user) {
@@ -194,10 +219,14 @@ const Profile = ({ user }) => {
       <section className={styles.profileHeader}>
         <h1>My Profile</h1>
         <div className={styles.userInfo}>
-          <h2>{user.username || user.email || 'User'}</h2>
+          <h2>{user.username || user.email || "User"}</h2>
           <p>{user.email}</p>
-          <span className={`${styles.role} ${user.role === 'admin' ? styles.admin : styles.customer}`}>
-            {user.role?.toUpperCase() || 'USER'}
+          <span
+            className={`${styles.role} ${
+              user.role === "admin" ? styles.admin : styles.customer
+            }`}
+          >
+            {user.role?.toUpperCase() || "USER"}
           </span>
         </div>
       </section>
@@ -205,7 +234,10 @@ const Profile = ({ user }) => {
       {error && (
         <div className={styles.errorMessage}>
           <p>⚠️ {error}</p>
-          <button onClick={() => window.location.reload()} className={styles.retryButton}>
+          <button
+            onClick={() => window.location.reload()}
+            className={styles.retryButton}
+          >
             Retry
           </button>
         </div>
@@ -217,14 +249,26 @@ const Profile = ({ user }) => {
           {user?.role === 'admin' ? (
             <>
               <button
-                className={`${styles.tabButton} ${activeTab === 'products' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('products')}
+                className={`${styles.tabButton} ${
+                  activeTab === "products" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveTab("products")}
               >
                 Product Management
               </button>
               <button
-                className={`${styles.tabButton} ${activeTab === 'activities' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('activities')}
+                className={`${styles.tabButton} ${
+                  activeTab === "bookings" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveTab("bookings")}
+              >
+                Bookings Management
+              </button>
+              <button
+                className={`${styles.tabButton} ${
+                  activeTab === "activities" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveTab("activities")}
               >
                 Activity Management
               </button>
@@ -232,8 +276,10 @@ const Profile = ({ user }) => {
           ) : (
             <>
               <button
-                className={`${styles.tabButton} ${activeTab === 'favorites' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('favorites')}
+                className={`${styles.tabButton} ${
+                  activeTab === "favorites" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveTab("favorites")}
               >
                 Favorites
               </button>
@@ -256,15 +302,22 @@ const Profile = ({ user }) => {
                 <div className={styles.sectionHeader}>
                   <h2>All Products Management</h2>
                   <div className={styles.productStats}>
-                    <span className={styles.statActive}>{activeCount} Active</span>
-                    <span className={styles.statInactive}>{inactiveCount} Inactive</span>
+                    <span className={styles.statActive}>
+                      {activeCount} Active
+                    </span>
+                    <span className={styles.statInactive}>
+                      {inactiveCount} Inactive
+                    </span>
                     <span className={styles.statTotal}>{totalCount} Total</span>
                   </div>
                 </div>
                 
                 <div className={styles.filterControls}>
                   <div className={styles.filterGroup}>
-                    <label htmlFor="statusFilter" className={styles.filterLabel}>
+                    <label
+                      htmlFor="statusFilter"
+                      className={styles.filterLabel}
+                    >
                       Filter by Status:
                     </label>
                     <select
@@ -279,10 +332,13 @@ const Profile = ({ user }) => {
                     </select>
                   </div>
                   <div className={styles.adminNote}>
-                    <p>💼 As an admin, you can manage all products on the platform.</p>
+                    <p>
+                      💼 As an admin, you can manage all products on the
+                      platform.
+                    </p>
                   </div>
                 </div>
-                
+
                 {loading ? (
                   <div className={styles.loadingState}>
                     <div className={styles.spinner}></div>
@@ -292,9 +348,9 @@ const Profile = ({ user }) => {
                   <div className={styles.emptyState}>
                     <div className={styles.emptyIcon}>📦</div>
                     <p>
-                      {statusFilter === 'all' 
+                      {statusFilter === "all"
                         ? "No products found in the platform."
-                        : statusFilter === 'active'
+                        : statusFilter === "active"
                         ? "No active products found."
                         : "No inactive products found."}
                     </p>
@@ -304,17 +360,17 @@ const Profile = ({ user }) => {
                   </div>
                 ) : (
                   <div className={styles.productsGrid}>
-                    {filteredProducts.map(product => (
-                      <Link 
-                        key={product.id} 
+                    {filteredProducts.map((product) => (
+                      <Link
+                        key={product.id}
                         to={`/products/${product.id}`}
                         className={styles.productCard}
                       >
                         <div className={styles.imageContainer}>
                           {product.image_url ? (
-                            <img 
-                              src={product.image_url} 
-                              alt={product.name} 
+                            <img
+                              src={product.image_url}
+                              alt={product.name}
                               className={styles.productImage}
                             />
                           ) : (
@@ -329,13 +385,23 @@ const Profile = ({ user }) => {
                         </div>
                         <div className={styles.productInfo}>
                           <h3>{product.name}</h3>
-                          <p className={styles.price}>${product.price.toFixed(2)}</p>
+                          <p className={styles.price}>
+                            ${product.price.toFixed(2)}
+                          </p>
                           <p className={styles.category}>{product.category}</p>
                           <div className={styles.ownerInfo}>
-                            <p className={styles.owner}>Owner: {product.user?.username || 'Unknown'}</p>
+                            <p className={styles.owner}>
+                              Owner: {product.user?.username || "Unknown"}
+                            </p>
                           </div>
-                          <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
-                            {product.is_active ? 'Active' : 'Inactive'}
+                          <span
+                            className={`${styles.status} ${
+                              product.is_active
+                                ? styles.active
+                                : styles.inactive
+                            }`}
+                          >
+                            {product.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
                       </Link>

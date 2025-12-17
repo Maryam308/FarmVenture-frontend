@@ -41,10 +41,19 @@ const signin = async (user) => {
 
     if (json.token) {
       window.localStorage.setItem("token", json.token);
-      const rawPayload = json.token.split(".")[1];
-      const jsonPayload = window.atob(rawPayload);
-      const user = JSON.parse(jsonPayload);
-      return user;
+
+      // Decode the token to get user info
+      const payload = JSON.parse(atob(json.token.split(".")[1]));
+
+      return {
+        id: payload.sub || payload.user_id || payload.id,
+        sub: payload.sub,
+        user_id: payload.user_id,
+        email: payload.email,
+        username: payload.username,
+        role: payload.role,
+        ...payload,
+      };
     }
   } catch (err) {
     console.log(err);
@@ -56,9 +65,23 @@ const getUser = () => {
   try {
     const token = localStorage.getItem("token");
     if (!token) return null;
-    const user = JSON.parse(atob(token.split(".")[1]));
-    return user;
+
+    // Decode the JWT token
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    // Extract and map user information
+    return {
+      id: payload.sub || payload.user_id || payload.id,
+
+      sub: payload.sub,
+      user_id: payload.user_id,
+      email: payload.email,
+      username: payload.username,
+      role: payload.role,
+      ...payload,
+    };
   } catch (error) {
+    console.error("Error decoding token:", error);
     return null;
   }
 };
