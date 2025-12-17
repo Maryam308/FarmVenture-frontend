@@ -13,17 +13,16 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const handleDelete = async () => {
-    if (window.confirm('⚠️ Are you sure you want to PERMANENTLY delete this product?\n\nThis action cannot be undone!')) {
-      try {
+ const handleDelete = async () => {
+    try {
         await handleDeleteProduct(productId);
         navigate('/products');
-      } catch (err) {
+    } catch (err) {
         setError('Failed to delete product: ' + err.message);
         console.error('Delete error:', err);
-      }
     }
   };
+
 
   useEffect(() => {
     const fetchProduct = async () => {
