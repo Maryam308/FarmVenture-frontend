@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import * as activityService from "../../services/activitiesService";
+import * as bookingService from "../../services/bookingService";
 import styles from "./ActivityDetails.module.css";
 import Loading from "../Loading/Loading";
 
@@ -12,6 +13,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isUpcoming, setIsUpcoming] = useState(true);
+  const [hasBooked, setHasBooked] = useState(false);
 
   // Format functions
   const formatPrice = (price) => `BHD${parseFloat(price).toFixed(2)}`;
@@ -61,44 +63,80 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
     }
   };
 
+  // Check if user has booked this activity
+  const checkUserBooking = async () => {
+    if (!user || user.role === "admin") {
+      setHasBooked(false);
+      return;
+    }
+
+    try {
+      const bookings = await bookingService.getMyBookings();
+      const booked = bookings.some(
+        (booking) =>
+          booking.activity_id === parseInt(activityId) &&
+          booking.status !== "past"
+      );
+      setHasBooked(booked);
+    } catch (error) {
+      console.error("Error checking user bookings:", error);
+      setHasBooked(false);
+    }
+  };
+
+  // Fetch activity details
+  const fetchActivity = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const activityData = await activityService.show(activityId);
+      setActivity(activityData);
+      setIsUpcoming(new Date(activityData.date_time) > new Date());
+    } catch (err) {
+      console.error("Fetch activity error:", err);
+      setError("Failed to load activity details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch
   useEffect(() => {
-    const fetchActivity = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+    fetchActivity();
+    checkUserBooking();
+  }, [activityId, user]);
 
-        const activityData = await activityService.show(activityId);
-
-        setActivity(activityData);
-        setIsUpcoming(new Date(activityData.date_time) > new Date());
-      } catch (err) {
-        console.error("Fetch activity error:", err);
-        setError("Failed to load activity details");
-      } finally {
-        setLoading(false);
-      }
+  // Listen for booking events
+  useEffect(() => {
+    const handleBookingEvent = () => {
+      fetchActivity(); // Refresh to update capacity
+      checkUserBooking(); // Refresh booking status
     };
 
-    fetchActivity();
-  }, [activityId]);
+    window.addEventListener("bookingCreated", handleBookingEvent);
+    window.addEventListener("bookingCancelled", handleBookingEvent);
+
+    return () => {
+      window.removeEventListener("bookingCreated", handleBookingEvent);
+      window.removeEventListener("bookingCancelled", handleBookingEvent);
+    };
+  }, [user, activityId]);
 
   if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
   if (!activity) return <div className={styles.error}>Activity not found</div>;
 
   const isAdmin = user?.role === "admin";
-  const canEditDelete = isAdmin;
-
   const dateTime = formatDateTime(activity.date_time);
   const isSoldOut = activity.current_capacity >= activity.max_capacity;
+  const spotsAvailable = activity.max_capacity - activity.current_capacity;
 
   return (
     <main className={styles.container}>
       <div className={styles.activityWrapper}>
-        {/* Activity Details */}
         <div className={styles.detailsContainer}>
           <header className={styles.header}>
-            {/* Activity Image */}
             <div className={styles.imageContainer}>
               {activity.image_url ? (
                 <img
@@ -189,8 +227,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                     {activity.current_capacity} of {activity.max_capacity}{" "}
                     booked
                     <span className={styles.spotsLeft}>
-                      ({activity.max_capacity - activity.current_capacity} spots
-                      left)
+                      ({spotsAvailable} spots left)
                     </span>
                   </span>
                 </div>
@@ -224,34 +261,55 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
           </section>
 
           {/* Booking Section (for upcoming events) */}
-          {isUpcoming && !isSoldOut && (
+          {isUpcoming && (
             <section className={styles.bookingSection}>
               <h3>Join This Activity</h3>
               <div className={styles.bookingInfo}>
                 <p>
                   <strong>
-                    {activity.max_capacity - activity.current_capacity} spots
+                    {spotsAvailable} spot{spotsAvailable !== 1 ? "s" : ""}{" "}
                     available
                   </strong>{" "}
                   out of {activity.max_capacity}
                 </p>
 
-                {user?.role !== "admin" ? (
+                {!isAdmin ? (
                   <div className={styles.bookingActions}>
-                    <Link
-                      to={`/activities/${activityId}/book`}
-                      className={styles.bookButton}
-                    >
-                      Book Now
-                    </Link>
-                    <p className={styles.bookingNote}>
-                      Secure your spot for this activity
-                    </p>
+                    {hasBooked ? (
+                      <button className={styles.bookedButton} disabled>
+                        <span className={styles.bookedIcon}>✓</span>
+                        Already Booked
+                      </button>
+                    ) : isSoldOut ? (
+                      <button className={styles.soldOutButton} disabled>
+                        Sold Out
+                      </button>
+                    ) : user ? (
+                      <>
+                        <Link
+                          to={`/activities/${activityId}/book`}
+                          className={styles.bookButton}
+                        >
+                          Book Now
+                        </Link>
+                        <p className={styles.bookingNote}>
+                          Secure your spot for this activity
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Link to="/signin" className={styles.bookButton}>
+                          Sign In to Book
+                        </Link>
+                        <p className={styles.bookingNote}>
+                          You need to be signed in to book activities
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <p className={styles.bookingNote}>
-                    To book this activity, please contact us or visit our farm
-                    office.
+                    Admin accounts cannot book activities
                   </p>
                 )}
               </div>
@@ -259,7 +317,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
           )}
 
           {/* Sold Out Notice */}
-          {isSoldOut && (
+          {isSoldOut && isUpcoming && (
             <section className={styles.soldOutSection}>
               <h3>Sold Out</h3>
               <div className={styles.soldOutInfo}>
@@ -282,6 +340,9 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   This activity has already taken place. View our upcoming
                   activities for future events.
                 </p>
+                <Link to="/activities" className={styles.browseButton}>
+                  Browse Upcoming Activities
+                </Link>
               </div>
             </section>
           )}
