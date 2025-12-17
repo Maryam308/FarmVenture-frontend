@@ -1,4 +1,4 @@
-const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/activities`;
+const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/activities`;
 
 // Get all activities (public - no auth needed for GET)
 const index = async (upcomingOnly = true, search = null) => {
@@ -12,6 +12,10 @@ const index = async (upcomingOnly = true, search = null) => {
     const url = queryString ? `${BASE_URL}?${queryString}` : BASE_URL;
 
     const res = await fetch(url);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch activities");
+    }
     return res.json();
   } catch (error) {
     console.error("Error fetching activities:", error);
@@ -126,4 +130,61 @@ const toggleStatus = async (activityId) => {
   }
 };
 
-export { index, show, create, update, remove, toggleStatus };
+// Get all activities for admin (ADMIN ONLY - requires token)
+const getAllActivitiesAdmin = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/admin/all`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch admin activities");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching admin activities:", error);
+    throw error;
+  }
+};
+
+// Upload image (ADMIN ONLY - requires token)
+const uploadImage = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${BASE_URL}/upload-image`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to upload image");
+    }
+
+    const data = await res.json();
+    return data.image_url;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
+
+export {
+  index,
+  show,
+  create,
+  update,
+  remove,
+  toggleStatus,
+  getAllActivitiesAdmin,
+  uploadImage,
+};

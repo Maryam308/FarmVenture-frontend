@@ -1,6 +1,6 @@
 // src/components/NavBar/NavBar.jsx
-import { Link } from 'react-router-dom';
-import styles from './NavBar.module.css';
+import { Link } from "react-router-dom";
+import styles from "./NavBar.module.css";
 
 const NavBar = ({ user, handleSignout }) => {
   return (
@@ -8,19 +8,43 @@ const NavBar = ({ user, handleSignout }) => {
       {user ? (
         <nav className={styles.container}>
           <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/products">Products</Link></li>
-            <li><Link to="/profile">Profile</Link></li>
-            <li><Link to="" onClick={handleSignout}>Sign Out</Link></li>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/products">Products</Link>
+            </li>
+            <li>
+              <Link to="/activities">Activities</Link>
+            </li>
+            <li>
+              <Link to="/profile">Profile</Link>
+            </li>
+            <li>
+              <Link to="" onClick={handleSignout}>
+                Sign Out
+              </Link>
+            </li>
           </ul>
         </nav>
       ) : (
         <nav className={styles.guestNav}>
           <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/products">Products</Link></li>
-            <li><Link to="/signin">Sign In</Link></li>
-            <li><Link to="/signup">Sign Up</Link></li>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/products">Products</Link>
+            </li>
+            <li>
+              <Link to="/activities">Activities</Link>
+            </li>
+            <li>
+              <Link to="/signin">Sign In</Link>
+            </li>
+            <li>
+              <Link to="/signup">Sign Up</Link>
+            </li>
           </ul>
         </nav>
       )}
