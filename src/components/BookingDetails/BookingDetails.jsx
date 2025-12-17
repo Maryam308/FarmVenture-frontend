@@ -86,13 +86,38 @@ const BookingDetails = ({ user }) => {
   };
 
   const canCancelBooking = () => {
-    if (!booking) return false;
+    if (!booking || !booking.activity || !booking.activity.date_time) {
+      console.log("Missing booking data");
+      return false;
+    }
+
+    // Check if booking is already past
+    if (booking.status === "past") {
+      console.log("Booking is past");
+      return false;
+    }
+
     const activityDate = new Date(booking.activity.date_time);
     const now = new Date();
-    return (
-      activityDate > now &&
-      (user?.role === "admin" || booking.user_id === user?.id)
-    );
+    const isFuture = activityDate > now;
+
+    // Check user permissions with string comparison
+    const isAdmin = user?.role === "admin";
+    const isBookingOwner = String(booking.user_id) === String(user?.id);
+    const canUserCancel = isAdmin || isBookingOwner;
+
+    console.log("canCancelBooking check:", {
+      isFuture,
+      isAdmin,
+      isBookingOwner,
+      activityDate: booking.activity.date_time,
+      now: now.toISOString(),
+      userRole: user?.role,
+      userId: user?.id,
+      bookingUserId: booking.user_id,
+    });
+
+    return isFuture && canUserCancel;
   };
 
   if (loading) {
@@ -109,39 +134,6 @@ const BookingDetails = ({ user }) => {
   if (error || !booking) {
     return (
       <main className={styles.container}>
-        <PopupAlert
-          isOpen={showCancelPopup}
-          onClose={() => setShowCancelPopup(false)}
-          title="Cancel Booking"
-          message={popupMessage}
-          type="warning"
-          confirmText="Yes, Cancel"
-          cancelText="No, Keep Booking"
-          showCancel={true}
-          onConfirm={handleCancelBookingConfirm}
-        />
-
-        <PopupAlert
-          isOpen={showSuccessPopup}
-          onClose={() => setShowSuccessPopup(false)}
-          title="Success"
-          message={popupMessage}
-          type="success"
-          confirmText="OK"
-          showCancel={false}
-          autoClose={true}
-          autoCloseTime={2000}
-        />
-
-        <PopupAlert
-          isOpen={showErrorPopup}
-          onClose={() => setShowErrorPopup(false)}
-          title="Error"
-          message={popupMessage}
-          type="error"
-          confirmText="OK"
-          showCancel={false}
-        />
         <div className={styles.error}>
           <h2>Booking Not Found</h2>
           <p>{error || "This booking could not be found"}</p>
@@ -161,6 +153,39 @@ const BookingDetails = ({ user }) => {
 
   return (
     <main className={styles.container}>
+      <PopupAlert
+        isOpen={showCancelPopup}
+        onClose={() => setShowCancelPopup(false)}
+        title="Cancel Booking"
+        message={popupMessage}
+        type="warning"
+        confirmText="Yes, Cancel"
+        cancelText="No, Keep Booking"
+        showCancel={true}
+        onConfirm={handleCancelBookingConfirm}
+      />
+
+      <PopupAlert
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="Success"
+        message={popupMessage}
+        type="success"
+        confirmText="OK"
+        showCancel={false}
+        autoClose={true}
+        autoCloseTime={2000}
+      />
+
+      <PopupAlert
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title="Error"
+        message={popupMessage}
+        type="error"
+        confirmText="OK"
+        showCancel={false}
+      />
       <div className={styles.bookingDetailsWrapper}>
         <header className={styles.header}>
           <button

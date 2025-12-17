@@ -61,7 +61,6 @@ const BookingForm = ({ user }) => {
 
     // Check if user is admin (admins can't book)
     if (user.role === "admin") {
-      alert("Admins cannot book activities. Please use a customer account.");
       return;
     }
 

@@ -535,20 +535,6 @@ const ActivityList = ({
                               </span>
                             </div>
 
-                            <div className={styles.detailItem}>
-                              <span className={styles.iconText}>👥</span>
-                              <span>
-                                {activity.current_capacity} of{" "}
-                                {activity.max_capacity} booked
-                              </span>
-                              <span className={styles.spotsLeft}>
-                                (
-                                {activity.max_capacity -
-                                  activity.current_capacity}{" "}
-                                spots left)
-                              </span>
-                            </div>
-
                             {activity.category && (
                               <div className={styles.detailItem}>
                                 <span className={styles.iconText}>🏷️</span>
