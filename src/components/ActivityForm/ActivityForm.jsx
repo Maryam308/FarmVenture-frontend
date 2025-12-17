@@ -19,7 +19,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     location: "",
     category: "",
     image_url: "",
-    is_active: true,
   });
 
   const [imageFile, setImageFile] = useState(null);
@@ -145,14 +144,13 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
         location: formData.location,
         category: formData.category,
         image_url: formData.image_url,
-        is_active: formData.is_active,
       };
 
       if (activityId) {
         await handleUpdateActivity(activityId, submitData);
         navigate("/activities");
       } else {
-        const { is_active, ...createData } = submitData;
+        const { ...createData } = submitData;
         await handleAddActivity(createData);
       }
     } catch (err) {
@@ -217,7 +215,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
             location: activityData.location || "",
             category: activityData.category || "",
             image_url: activityData.image_url || "",
-            is_active: activityData.is_active,
           });
         } catch (err) {
           setError("Failed to load activity");
@@ -440,56 +437,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
             required
           />
         </div>
-
-        {/* Active/Inactive Radio Buttons (Only for editing) */}
-        {activityId && (
-          <div className={styles.formGroup}>
-            <label>Activity Status *</label>
-            <div className={styles.radioGroup}>
-              <label
-                className={`${styles.radioLabel} ${
-                  formData.is_active ? styles.active : ""
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="is_active"
-                  value="true"
-                  checked={formData.is_active === true}
-                  onChange={() =>
-                    setFormData((prev) => ({ ...prev, is_active: true }))
-                  }
-                />
-                <span className={styles.radioText}>
-                  <span className={styles.statusDot}></span>
-                  Active (Visible to customers)
-                </span>
-              </label>
-              <label
-                className={`${styles.radioLabel} ${
-                  formData.is_active === false ? styles.inactive : ""
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="is_active"
-                  value="false"
-                  checked={formData.is_active === false}
-                  onChange={() =>
-                    setFormData((prev) => ({ ...prev, is_active: false }))
-                  }
-                />
-                <span className={styles.radioText}>
-                  <span className={styles.statusDot}></span>
-                  Inactive (Hidden from customers)
-                </span>
-              </label>
-            </div>
-            <p className={styles.radioHelp}>
-              Note: Inactive activities are hidden from public view.
-            </p>
-          </div>
-        )}
 
         {/* Form Summary Preview */}
         {formData.title && (
