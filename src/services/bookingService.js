@@ -14,8 +14,6 @@ const createBooking = async (activityId, ticketsNumber = 1) => {
       tickets_number: parseInt(ticketsNumber),
     };
 
-    console.log("Creating booking with:", bookingPayload);
-
     const res = await fetch(BASE_URL, {
       method: "POST",
       headers: {
@@ -25,28 +23,22 @@ const createBooking = async (activityId, ticketsNumber = 1) => {
       body: JSON.stringify(bookingPayload),
     });
 
-    console.log("Response status:", res.status);
-
     // Try to parse the response
     let responseData;
     try {
       responseData = await res.json();
     } catch (parseError) {
-      console.error("Could not parse response as JSON:", parseError);
       throw new Error(`HTTP ${res.status}: Failed to create booking`);
     }
 
     if (!res.ok) {
-      console.error("Booking failed with:", responseData);
       throw new Error(
         responseData.detail || `HTTP ${res.status}: Failed to create booking`
       );
     }
 
-    console.log("Booking created successfully:", responseData);
     return responseData;
   } catch (error) {
-    console.error("Error creating booking:", error);
     throw error;
   }
 };
@@ -67,7 +59,7 @@ const getMyBookings = async (statusFilter = null) => {
       ? `${BASE_URL}/my?${queryString}`
       : `${BASE_URL}/my`;
 
-    console.log("Fetching bookings from:", url);
+   
 
     const res = await fetch(url, {
       headers: {
@@ -87,7 +79,7 @@ const getMyBookings = async (statusFilter = null) => {
 
     return await res.json();
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
+ 
     throw error;
   }
 };
@@ -116,7 +108,7 @@ const getAllForUser = async () => {
 
     return await res.json();
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
+   
     throw error;
   }
 };
@@ -149,7 +141,7 @@ const getAllBookingsAdmin = async (filters = {}) => {
 
     return res.json();
   } catch (error) {
-    console.error("Error fetching admin bookings:", error);
+   
     throw error;
   }
 };
@@ -170,7 +162,7 @@ const getBookingById = async (bookingId) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error fetching booking ${bookingId}:`, error);
+   
     throw error;
   }
 };
@@ -200,7 +192,7 @@ const updateBooking = async (bookingId, updateData) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error updating booking ${bookingId}:`, error);
+   
     throw error;
   }
 };
@@ -222,7 +214,7 @@ const cancelBooking = async (bookingId) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error canceling booking ${bookingId}:`, error);
+   
     throw error;
   }
 };
@@ -243,7 +235,6 @@ const getBookingStatsAdmin = async () => {
 
     return res.json();
   } catch (error) {
-    console.error("Error fetching booking statistics:", error);
     throw error;
   }
 };
@@ -251,9 +242,7 @@ const getBookingStatsAdmin = async () => {
 // Helper function to check if user can book an activity
 const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
   try {
-    console.log(
-      `Checking availability for activity ${activityId}, tickets: ${ticketsNumber}`
-    );
+   
 
     // Get activity details - USE THE CORRECT API ENDPOINT
     const activitiesRes = await fetch(
@@ -268,7 +257,7 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
     }
 
     const activity = await activitiesRes.json();
-    console.log("Activity data received:", activity);
+  
 
     // Basic validation checks
     const now = new Date();
@@ -284,9 +273,7 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
 
     // Check capacity
     const spotsLeft = activity.max_capacity - activity.current_capacity;
-    console.log(
-      `Spots left: ${spotsLeft}, Tickets requested: ${ticketsNumber}`
-    );
+
 
     if (spotsLeft <= 0) {
       return {
@@ -323,8 +310,7 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
           return availabilityData;
         }
       } catch (err) {
-        console.log("Note: Could not check booking duplication:", err.message);
-        // Continue with basic availability check
+
       }
     }
 
@@ -343,7 +329,7 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
       },
     };
   } catch (error) {
-    console.error("Error checking booking availability:", error);
+
     return {
       available: false,
       message:

@@ -17,7 +17,6 @@ const index = async (upcomingOnly = true, search = null) => {
     }
     return res.json();
   } catch (error) {
-    console.error("Error fetching activities:", error);
     throw error;
   }
 };
@@ -37,7 +36,6 @@ const getAllForUser = async () => {
 
     return res.json();
   } catch (error) {
-    console.error("Error fetching user bookings:", error);
     throw error;
   }
 };
@@ -52,7 +50,6 @@ const show = async (activityId) => {
     }
     return res.json();
   } catch (error) {
-    console.error(`Error fetching activity ${activityId}:`, error);
     throw error;
   }
 };
@@ -76,7 +73,6 @@ const create = async (activityFormData) => {
 
     return res.json();
   } catch (error) {
-    console.error("Error creating activity:", error);
     throw error;
   }
 };
@@ -100,7 +96,6 @@ const update = async (activityId, activityFormData) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error updating activity ${activityId}:`, error);
     throw error;
   }
 };
@@ -121,7 +116,6 @@ const remove = async (activityId) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error deleting activity ${activityId}:`, error);
     throw error;
   }
 };
@@ -143,7 +137,6 @@ const toggleStatus = async (activityId) => {
 
     return res.json();
   } catch (error) {
-    console.error(`Error toggling activity ${activityId}:`, error);
     throw error;
   }
 };
@@ -163,7 +156,6 @@ const getAllActivitiesAdmin = async () => {
 
     return res.json();
   } catch (error) {
-    console.error("Error fetching admin activities:", error);
     throw error;
   }
 };
@@ -190,7 +182,6 @@ const uploadImage = async (file) => {
     const data = await res.json();
     return data.image_url;
   } catch (error) {
-    console.error("Error uploading image:", error);
     throw error;
   }
 };

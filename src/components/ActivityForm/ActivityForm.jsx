@@ -148,8 +148,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
         is_active: formData.is_active,
       };
 
-      console.log("Submitting activity data:", submitData);
-
       if (activityId) {
         await handleUpdateActivity(activityId, submitData);
         navigate("/activities");
@@ -159,7 +157,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
       }
     } catch (err) {
       setError(err.message || "Failed to save activity. Please try again.");
-      console.error("Save error:", err);
     } finally {
       setLoading(false);
     }
@@ -192,7 +189,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
         try {
           setLoading(true);
           const activityData = await activityService.show(activityId);
-          console.log("Fetched activity data:", activityData);
 
           // Parse existing date_time
           let date = "";
@@ -225,7 +221,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           });
         } catch (err) {
           setError("Failed to load activity");
-          console.error("Fetch error:", err);
         } finally {
           setLoading(false);
         }
