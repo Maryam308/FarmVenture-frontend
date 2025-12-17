@@ -1,186 +1,130 @@
 // src/components/Profile/Profile.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import * as productService from '../../services/productService';
 import * as favoriteService from '../../services/favoriteService';
 import styles from './Profile.module.css';
 
 const Profile = ({ user }) => {
+  // Main tab state
   const [activeTab, setActiveTab] = useState(user?.role === 'admin' ? 'products' : 'favorites');
+  
+  // Sub-filter states
+  const [favoriteFilter, setFavoriteFilter] = useState('all'); // 'all', 'products', 'activities'
+  const [adminFilter, setAdminFilter] = useState('products'); // 'products', 'activities'
+  
   const [userProducts, setUserProducts] = useState([]);
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [favoriteActivities, setFavoriteActivities] = useState([]);
-  const [bookedActivities, setBookedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingFavorites, setLoadingFavorites] = useState(true);
   const [error, setError] = useState(null);
   
-  // State for admin filter
-  const [statusFilter, setStatusFilter] = useState('active'); // 'active', 'inactive', 'all'
-  
-  // State for favorites filter (for customers)
-  const [favoritesFilter, setFavoritesFilter] = useState('all'); // 'all', 'products', 'activities'
+  // State for admin product status filter
+  const [statusFilter, setStatusFilter] = useState('active');
 
-  // Fetch real favorites from API
-  const fetchFavorites = useCallback(async () => {
-    if (!user) {
-      console.log('No user for fetchFavorites');
-      return;
-    }
-    
-    try {
-      setLoadingFavorites(true);
-      console.log('Profile: Fetching favorites for user:', user);
-      
-      // Debug the API response first
-      console.log('Debugging favorites API...');
-      const debugResponse = await favoriteService.debugApiResponse(
-        `${import.meta.env.VITE_BACKEND_URL}/api/favorites`
-      );
-      console.log('Debug response:', debugResponse);
-      
-      // Use getFavorites to get full details
-      const allFavorites = await favoriteService.getFavorites();
-      console.log('Profile: Received favorites data:', allFavorites);
-      console.log('Profile: Number of favorites:', allFavorites.length);
-      
-      // Separate products and activities
-      const products = [];
-      const activities = [];
-      
-      allFavorites.forEach((fav, index) => {
-        console.log(`Processing favorite ${index}:`, fav);
-        
-        if (fav.item_type === 'product') {
-          if (fav.item) {
-            console.log('Found product favorite with item data:', fav.item);
-            products.push({
-              ...fav.item,
-              favorite_id: fav.id,
-              favorited_at: fav.created_at
-            });
-          } else {
-            console.log('Found product favorite but no item data, fav.item_id:', fav.item_id);
-            // Try to fetch the product details separately if needed
-          }
-        } else if (fav.item_type === 'activity') {
-          if (fav.item) {
-            console.log('Found activity favorite with item data:', fav.item);
-            activities.push({
-              ...fav.item,
-              favorite_id: fav.id,
-              favorited_at: fav.created_at
-            });
-          } else {
-            console.log('Found activity favorite but no item data');
-          }
-        }
-      });
-      
-      console.log('Profile: Products found after processing:', products);
-      console.log('Profile: Activities found after processing:', activities);
-      
-      setFavoriteProducts(products);
-      setFavoriteActivities(activities);
-    } catch (error) {
-      console.error('Profile: Error fetching favorites:', error);
-      setFavoriteProducts([]);
-      setFavoriteActivities([]);
-    } finally {
-      setLoadingFavorites(false);
-    }
-  }, [user]);
-
+  // MAIN DATA FETCH - runs once on mount and when user changes
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) {
+        console.log('Profile: No user found');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
         
         console.log('Profile: User object:', user);
         
-        if (!user) {
-          console.log('Profile: No user found');
-          setUserProducts([]);
-          return;
-        }
-        
-        if (user?.role === 'admin') {
-          // Admin can see all products (including inactive)
+        if (user.role === 'admin') {
+          // Admin: fetch products
           console.log('Profile: Fetching all products for admin');
           const allProducts = await productService.getAllProductsAdmin(true);
           console.log('Profile: Admin products fetched:', allProducts.length);
           setUserProducts(allProducts);
-        } else {
-          // Regular users see only their own products including inactive
-          console.log('Profile: Fetching user products for user:', user);
+        } else if (user.role === 'customer') {
+          // Customer: fetch favorites
+          console.log('Profile: Fetching favorites for customer');
           
-          // Get user ID - check different possible locations
-          const userId = user.id || user._id || user.userId;
-          console.log('Profile: Extracted userId:', userId);
+          const allFavorites = await favoriteService.getFavorites();
+          console.log('Profile: Received favorites data:', allFavorites);
           
-          if (!userId) {
-            console.error('Profile: User ID not found in user object:', user);
-            throw new Error('User ID not found in user object');
-          }
+          const products = [];
+          const activities = [];
           
-          const allUserProducts = await productService.getAllUserProducts(userId);
-          console.log('Profile: User products fetched:', allUserProducts.length);
-          setUserProducts(allUserProducts);
-          
-          // Fetch real favorites
-          console.log('Profile: Starting to fetch favorites...');
-          await fetchFavorites();
-          
-          // TODO: Replace with actual API calls when available
-          // Mock data for demonstration (activities)
-          console.log('Profile: Setting mock booked activities');
-          setBookedActivities([
-            {
-              id: 1,
-              title: 'Farm Tour & Tasting',
-              date_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-              price: 25.00,
-              status: 'Confirmed',
-              ticket_code: 'FARM-2024-001'
-            },
-            {
-              id: 2,
-              title: 'Cheese Making Workshop',
-              date_time: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
-              price: 45.00,
-              status: 'Confirmed',
-              ticket_code: 'CHEESE-2024-002'
+          allFavorites.forEach((fav, index) => {
+            console.log(`Processing favorite ${index}:`, fav);
+            
+            if (fav.item_type === 'product' && fav.item) {
+              console.log('Found product favorite with item data:', fav.item);
+              products.push({
+                ...fav.item,
+                favorite_id: fav.id,
+                favorited_at: fav.created_at
+              });
+            } else if (fav.item_type === 'activity' && fav.item) {
+              console.log('Found activity favorite with item data:', fav.item);
+              activities.push({
+                ...fav.item,
+                favorite_id: fav.id,
+                favorited_at: fav.created_at
+              });
             }
-          ]);
+          });
+          
+          console.log('Profile: Products found:', products.length);
+          console.log('Profile: Activities found:', activities.length);
+          setFavoriteProducts(products);
+          setFavoriteActivities(activities);
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
         setError(error.message || 'Failed to load profile data');
-        setUserProducts([]);
-        setFavoriteProducts([]);
-        setFavoriteActivities([]);
       } finally {
         console.log('Profile: Setting loading to false');
         setLoading(false);
       }
     };
 
-    console.log('Profile: Component mounted, user:', user);
-    if (user) {
-      console.log('Profile: User detected, fetching data');
-      fetchData();
-    } else {
-      console.log('Profile: No user, setting loading to false');
-      setLoading(false);
-    }
-  }, [user, fetchFavorites]);
+    fetchData();
+  }, [user?.sub, user?.role]);
 
-  // Listen for favorite updates
+  // Listen for favorite updates - only for customers
   useEffect(() => {
-    const handleFavoriteUpdate = () => {
-      console.log('Profile: Favorite update event received');
-      fetchFavorites();
+    if (!user || user.role !== 'customer') return;
+
+    const handleFavoriteUpdate = async () => {
+      console.log('Profile: Favorite update event received, refreshing favorites');
+      
+      try {
+        const allFavorites = await favoriteService.getFavorites();
+        console.log('Profile: Refreshed favorites:', allFavorites);
+        
+        const products = [];
+        const activities = [];
+        
+        allFavorites.forEach((fav) => {
+          if (fav.item_type === 'product' && fav.item) {
+            products.push({
+              ...fav.item,
+              favorite_id: fav.id,
+              favorited_at: fav.created_at
+            });
+          } else if (fav.item_type === 'activity' && fav.item) {
+            activities.push({
+              ...fav.item,
+              favorite_id: fav.id,
+              favorited_at: fav.created_at
+            });
+          }
+        });
+        
+        setFavoriteProducts(products);
+        setFavoriteActivities(activities);
+      } catch (error) {
+        console.error('Error refreshing favorites:', error);
+      }
     };
 
     window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
@@ -190,34 +134,30 @@ const Profile = ({ user }) => {
       window.removeEventListener('favoriteUpdated', handleFavoriteUpdate);
       window.removeEventListener('storage', handleFavoriteUpdate);
     };
-  }, [fetchFavorites]);
+  }, [user?.sub, user?.role]);
 
   // Filter products based on selected filter (admin only)
   const filteredProducts = userProducts.filter(product => {
     if (statusFilter === 'active') return product.is_active;
     if (statusFilter === 'inactive') return !product.is_active;
-    return true; // 'all'
+    return true;
   });
 
-  // Filter favorites based on selected filter (customer only)
-  const getFilteredFavorites = () => {
-    if (favoritesFilter === 'products') {
-      return favoriteProducts;
-    } else if (favoritesFilter === 'activities') {
-      return favoriteActivities;
-    } else {
-      return [...favoriteProducts, ...favoriteActivities];
-    }
-  };
-
-  const filteredFavorites = getFilteredFavorites();
   const activeCount = userProducts.filter(p => p.is_active).length;
   const inactiveCount = userProducts.filter(p => !p.is_active).length;
   const totalCount = userProducts.length;
 
-  // Add favorite toggle handler for Profile
+  // Get favorites based on filter
+  const getFilteredFavorites = () => {
+    if (favoriteFilter === 'products') return favoriteProducts;
+    if (favoriteFilter === 'activities') return favoriteActivities;
+    // 'all' - combine both
+    return [...favoriteProducts, ...favoriteActivities];
+  };
+
+  // Handle favorite toggle for Profile
   const handleFavoriteToggle = async (itemId, itemType, isFavorited) => {
-    if (!user) return;
+    if (!user || user.role !== 'customer') return;
     
     try {
       if (isFavorited) {
@@ -226,12 +166,8 @@ const Profile = ({ user }) => {
         await favoriteService.addFavorite(itemId, itemType);
       }
       
-      // Trigger update
       localStorage.setItem('favorites_updated', Date.now().toString());
       window.dispatchEvent(new Event('favoriteUpdated'));
-      
-      // Refresh favorites
-      await fetchFavorites();
     } catch (error) {
       console.error('Error toggling favorite from profile:', error);
     }
@@ -243,7 +179,7 @@ const Profile = ({ user }) => {
         <div className={styles.errorState}>
           <h2>Please Sign In</h2>
           <p>You need to be signed in to view your profile.</p>
-          <Link to="/login" className={styles.browseButton}>
+          <Link to="/signin" className={styles.browseButton}>
             Sign In
           </Link>
         </div>
@@ -251,14 +187,12 @@ const Profile = ({ user }) => {
     );
   }
 
-  console.log('Profile: Rendering, loading:', loading, 'loadingFavorites:', loadingFavorites);
-  console.log('Profile: favoriteProducts count:', favoriteProducts.length);
-  console.log('Profile: favoriteActivities count:', favoriteActivities.length);
+  const filteredFavorites = getFilteredFavorites();
 
   return (
     <main className={styles.container}>
       <section className={styles.profileHeader}>
-        <h1>Your Profile</h1>
+        <h1>My Profile</h1>
         <div className={styles.userInfo}>
           <h2>{user.username || user.email || 'User'}</h2>
           <p>{user.email}</p>
@@ -268,17 +202,6 @@ const Profile = ({ user }) => {
         </div>
       </section>
 
-      {/* Debug Info - Remove in production */}
-      <div style={{ background: '#f5f5f5', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
-        <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
-          Debug: Loading={loading ? 'true' : 'false'}, 
-          Favorites Loading={loadingFavorites ? 'true' : 'false'}, 
-          Products={favoriteProducts.length}, 
-          Activities={favoriteActivities.length}
-        </p>
-      </div>
-
-      {/* Error Message */}
       {error && (
         <div className={styles.errorMessage}>
           <p>⚠️ {error}</p>
@@ -288,50 +211,47 @@ const Profile = ({ user }) => {
         </div>
       )}
 
-      {/* Tab Navigation - Different tabs for admin vs customer */}
       <section className={styles.tabsSection}>
+        {/* Main Tabs */}
         <div className={styles.tabNav}>
           {user?.role === 'admin' ? (
-            // Admin tabs
             <>
               <button
                 className={`${styles.tabButton} ${activeTab === 'products' ? styles.activeTab : ''}`}
                 onClick={() => setActiveTab('products')}
               >
-                Products Management
+                Product Management
               </button>
               <button
                 className={`${styles.tabButton} ${activeTab === 'activities' ? styles.activeTab : ''}`}
                 onClick={() => setActiveTab('activities')}
               >
-                Activities Management
+                Activity Management
               </button>
             </>
           ) : (
-            // Customer tabs - Only Favorites and Booked Activities
             <>
               <button
                 className={`${styles.tabButton} ${activeTab === 'favorites' ? styles.activeTab : ''}`}
                 onClick={() => setActiveTab('favorites')}
               >
-                <span className={styles.tabIcon}>❤️</span>
-                My Favorites
+                Favorites
               </button>
               <button
-                className={`${styles.tabButton} ${activeTab === 'booked' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('booked')}
+                className={`${styles.tabButton} ${activeTab === 'bookings' ? styles.activeTab : ''}`}
+                onClick={() => setActiveTab('bookings')}
               >
-                <span className={styles.tabIcon}>🎫</span>
                 Booked Activities
               </button>
             </>
           )}
         </div>
 
-        {user?.role === 'admin' ? (
-          // Admin content
+        {/* ADMIN VIEW */}
+        {user?.role === 'admin' && (
           <>
-            {activeTab === 'products' ? (
+            {/* Product Management Tab */}
+            {activeTab === 'products' && (
               <div className={styles.productsSection}>
                 <div className={styles.sectionHeader}>
                   <h2>All Products Management</h2>
@@ -342,7 +262,6 @@ const Profile = ({ user }) => {
                   </div>
                 </div>
                 
-                {/* Dropdown Filter Controls */}
                 <div className={styles.filterControls}>
                   <div className={styles.filterGroup}>
                     <label htmlFor="statusFilter" className={styles.filterLabel}>
@@ -424,57 +343,68 @@ const Profile = ({ user }) => {
                   </div>
                 )}
               </div>
-            ) : (
-              // Admin Activities Management Tab
-              <div className={styles.activitiesSection}>
+            )}
+
+            {/* Activity Management Tab */}
+            {activeTab === 'activities' && (
+              <div className={styles.productsSection}>
                 <div className={styles.sectionHeader}>
-                  <h2>Activities Management</h2>
-                  <div className={styles.placeholderStats}>
-                    <span className={styles.statCount}>0 Activities</span>
-                  </div>
+                  <h2>All Activities Management</h2>
                 </div>
-                <div className={styles.placeholder}>
-                  <div className={styles.placeholderIcon}>📅</div>
-                  <p>Activities management feature coming soon!</p>
-                  <p className={styles.helperText}>You'll be able to create and manage farm activities here.</p>
+                
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>🎯</div>
+                  <p>Activity management is coming soon!</p>
+                  <p className={styles.helperText}>
+                    You'll be able to manage all activities on the platform here.
+                  </p>
                 </div>
               </div>
             )}
           </>
-        ) : (
-          // Customer content - Only Favorites and Booked Activities
+        )}
+
+        {/* CUSTOMER VIEW */}
+        {user?.role === 'customer' && (
           <>
-            {activeTab === 'favorites' ? (
+            {/* Favorites Tab */}
+            {activeTab === 'favorites' && (
               <div className={styles.favoritesSection}>
                 <div className={styles.sectionHeader}>
-                  <h2>My Favorites ❤️</h2>
+                  <h2>My Favorites</h2>
                   <div className={styles.favoritesStats}>
                     <span className={styles.statCount}>
-                      {filteredFavorites.length} {filteredFavorites.length === 1 ? 'Item' : 'Items'}
+                      {favoriteProducts.length + favoriteActivities.length} Total
+                    </span>
+                    <span className={styles.statProducts}>
+                      {favoriteProducts.length} Products
+                    </span>
+                    <span className={styles.statActivities}>
+                      {favoriteActivities.length} Activities
                     </span>
                   </div>
                 </div>
-                
-                {/* Favorites Filter Dropdown */}
-                <div className={styles.filterControls}>
+
+                {/* Sub-filter for favorites */}
+                <div className={styles.subFilterControls}>
                   <div className={styles.filterGroup}>
-                    <label htmlFor="favoritesFilter" className={styles.filterLabel}>
-                      Filter Favorites:
+                    <label htmlFor="favoriteFilter" className={styles.filterLabel}>
+                      Show:
                     </label>
                     <select
-                      id="favoritesFilter"
-                      value={favoritesFilter}
-                      onChange={(e) => setFavoritesFilter(e.target.value)}
+                      id="favoriteFilter"
+                      value={favoriteFilter}
+                      onChange={(e) => setFavoriteFilter(e.target.value)}
                       className={styles.filterSelect}
                     >
                       <option value="all">All Favorites</option>
-                      <option value="products">Favorite Products</option>
-                      <option value="activities">Favorite Activities</option>
+                      <option value="products">Products Only</option>
+                      <option value="activities">Activities Only</option>
                     </select>
                   </div>
                 </div>
                 
-                {loading || loadingFavorites ? (
+                {loading ? (
                   <div className={styles.loadingState}>
                     <div className={styles.spinner}></div>
                     <p>Loading favorites...</p>
@@ -483,170 +413,102 @@ const Profile = ({ user }) => {
                   <div className={styles.emptyState}>
                     <div className={styles.emptyIcon}>❤️</div>
                     <p>
-                      {favoritesFilter === 'all' 
-                        ? "You haven't favorited any items yet."
-                        : favoritesFilter === 'products'
+                      {favoriteFilter === 'all' 
+                        ? "You haven't favorited anything yet."
+                        : favoriteFilter === 'products'
                         ? "You haven't favorited any products yet."
                         : "You haven't favorited any activities yet."}
                     </p>
                     <p className={styles.helperText}>
-                      Browse {favoritesFilter === 'products' ? 'products' : favoritesFilter === 'activities' ? 'activities' : 'items'} and click the heart icon to add them to favorites.
+                      Browse {favoriteFilter === 'activities' ? 'activities' : 'products'} and click the heart icon to add them to favorites.
                     </p>
                     <div className={styles.buttonGroup}>
                       <Link to="/products" className={styles.browseButton}>
                         Browse Products
                       </Link>
-                      <Link to="/activities" className={styles.secondaryButton}>
-                        Browse Activities
-                      </Link>
                     </div>
                   </div>
                 ) : (
                   <div className={styles.favoritesGrid}>
-                    {filteredFavorites.map((item, index) => {
-                      // Check if item has price property to determine if it's a product
-                      console.log('Rendering favorite item:', item);
+                    {filteredFavorites.map((item) => {
+                      const isProduct = item.name !== undefined; // Products have 'name', activities have 'title'
+                      const itemType = isProduct ? 'product' : 'activity';
                       
-                      if (item.price !== undefined && item.category !== undefined) {
-                        // Product card
-                        return (
-                          <div key={`product-${item.id}-${index}`} className={styles.favoriteCard}>
-                            <div className={styles.cardHeader}>
-                              <span className={styles.typeBadge}>🛍️ Product</span>
-                              <button
-                                className={styles.favoriteButton}
-                                onClick={() => handleFavoriteToggle(item.id, 'product', true)}
-                                aria-label="Remove from favorites"
-                              >
-                                ❤️
-                              </button>
-                            </div>
-                            <div className={styles.cardContent}>
-                              <h3>{item.name || 'Untitled Product'}</h3>
-                              <p className={styles.price}>${item.price?.toFixed(2) || '0.00'}</p>
-                              <p className={styles.category}>{item.category || 'Uncategorized'}</p>
-                              <p className={styles.description}>{item.description || 'No description available.'}</p>
-                            </div>
-                            <div className={styles.cardFooter}>
-                              <span className={styles.owner}>By: {item.user?.username || 'Unknown'}</span>
-                              <span className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}>
-                                {item.is_active ? 'Active' : 'Inactive'}
-                              </span>
-                            </div>
-                            <Link 
-                              to={`/products/${item.id}`} 
-                              className={styles.viewButton}
-                              style={{display: 'block', marginTop: '1rem', textAlign: 'center'}}
+                      return (
+                        <div key={`${itemType}-${item.id}`} className={styles.favoriteCard}>
+                          <div className={styles.cardHeader}>
+                            <span className={styles.typeBadge}>
+                              {isProduct ? 'Product' : 'Activity'}
+                            </span>
+                            <button
+                              className={styles.favoriteButton}
+                              onClick={() => handleFavoriteToggle(item.id, itemType, true)}
+                              aria-label="Remove from favorites"
                             >
-                              View Product
-                            </Link>
+                            </button>
                           </div>
-                        );
-                      } else {
-                        // Activity card
-                        return (
-                          <div key={`activity-${item.id}-${index}`} className={styles.favoriteCard}>
-                            <div className={styles.cardHeader}>
-                              <span className={styles.typeBadge}>📅 Activity</span>
-                              <button
-                                className={styles.favoriteButton}
-                                onClick={() => handleFavoriteToggle(item.id, 'activity', true)}
-                                aria-label="Remove from favorites"
-                              >
-                                ❤️
-                              </button>
-                            </div>
-                            <div className={styles.cardContent}>
-                              <h3>{item.title || item.name || 'Untitled Activity'}</h3>
-                              <p className={styles.activityDate}>
-                                📅 {item.date_time ? new Date(item.date_time).toLocaleDateString() : 'Date not set'}
-                              </p>
-                              <p className={styles.price}>${(item.price || 0).toFixed(2)}</p>
-                              <p className={styles.description}>{item.description || item.details || 'No description available.'}</p>
-                            </div>
-                            <div className={styles.cardFooter}>
-                              <span className={styles.status}>{item.status || 'Available'}</span>
-                            </div>
+                          <div className={styles.cardContent}>
+                            <h3>{isProduct ? (item.name || 'Untitled Product') : (item.title || 'Untitled Activity')}</h3>
+                            <p className={styles.price}>
+                              ${item.price?.toFixed(2) || '0.00'}
+                              {!isProduct && ' per person'}
+                            </p>
+                            {isProduct ? (
+                              <p className={styles.category}>{item.category || 'Uncategorized'}</p>
+                            ) : (
+                              <>
+                                <p className={styles.activityDate}>
+                                  📅 {new Date(item.date_time).toLocaleDateString()}
+                                </p>
+                                <p className={styles.activityDuration}>
+                                  ⏱️ {item.duration_minutes} minutes
+                                </p>
+                              </>
+                            )}
+                            <p className={styles.description}>{item.description || 'No description available.'}</p>
                           </div>
-                        );
-                      }
+                          <div className={styles.cardFooter}>
+                            <span className={styles.owner}>By: {item.user?.username || 'Unknown'}</span>
+                            <span className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}>
+                              {item.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
+                          <Link 
+                            to={isProduct ? `/products/${item.id}` : `/activities/${item.id}`}
+                            className={styles.viewButton}
+                          >
+                            View {isProduct ? 'Product' : 'Activity'}
+                          </Link>
+                        </div>
+                      );
                     })}
                   </div>
                 )}
               </div>
-            ) : (
-              // Booked Activities Tab
-              <div className={styles.bookedSection}>
+            )}
+
+            {/* Booked Activities Tab */}
+            {activeTab === 'bookings' && (
+              <div className={styles.favoritesSection}>
                 <div className={styles.sectionHeader}>
-                  <h2>Booked Activities 🎫</h2>
-                  <div className={styles.bookedStats}>
-                    <span className={styles.statCount}>
-                      {bookedActivities.length} {bookedActivities.length === 1 ? 'Booking' : 'Bookings'}
-                    </span>
+                  <h2>My Booked Activities</h2>
+                  <div className={styles.favoritesStats}>
+                    <span className={styles.statCount}>0 Bookings</span>
                   </div>
                 </div>
                 
-                {loading ? (
-                  <div className={styles.loadingState}>
-                    <div className={styles.spinner}></div>
-                    <p>Loading booked activities...</p>
-                  </div>
-                ) : bookedActivities.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>🎫</div>
-                    <p>You haven't booked any activities yet.</p>
-                    <p className={styles.helperText}>Explore farm activities and book your spot!</p>
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>📅</div>
+                  <p>You haven't booked any activities yet.</p>
+                  <p className={styles.helperText}>
+                    This feature is coming soon! You'll be able to book and manage your activity reservations here.
+                  </p>
+                  <div className={styles.buttonGroup}>
                     <Link to="/activities" className={styles.browseButton}>
                       Browse Activities
                     </Link>
                   </div>
-                ) : (
-                  <div className={styles.bookedGrid}>
-                    {bookedActivities.map(activity => (
-                      <div key={activity.id} className={styles.bookedCard}>
-                        <div className={styles.cardHeader}>
-                          <span className={styles.ticketBadge}>
-                            🎫 Ticket: {activity.ticket_code}
-                          </span>
-                          <span className={`${styles.status} ${activity.status === 'Confirmed' ? styles.confirmed : styles.pending}`}>
-                            {activity.status}
-                          </span>
-                        </div>
-                        <div className={styles.cardContent}>
-                          <h3>{activity.title}</h3>
-                          <div className={styles.activityDetails}>
-                            <div className={styles.detailItem}>
-                              <span className={styles.detailIcon}>📅</span>
-                              <span className={styles.detailText}>
-                                {new Date(activity.date_time).toLocaleDateString()}
-                              </span>
-                            </div>
-                            <div className={styles.detailItem}>
-                              <span className={styles.detailIcon}>⏰</span>
-                              <span className={styles.detailText}>
-                                {new Date(activity.date_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                              </span>
-                            </div>
-                            <div className={styles.detailItem}>
-                              <span className={styles.detailIcon}>💰</span>
-                              <span className={styles.detailText}>
-                                ${activity.price.toFixed(2)} per person
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.cardFooter}>
-                          <button className={styles.viewButton}>
-                            View Details
-                          </button>
-                          <button className={styles.cancelButton}>
-                            Cancel Booking
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                </div>
               </div>
             )}
           </>

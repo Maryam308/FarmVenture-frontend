@@ -1,4 +1,3 @@
-// src/components/ProductDetails/ProductDetails.jsx
 import { useState, useEffect } from 'react';  
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import AuthorInfo from '../AuthorInfo/AuthorInfo';
@@ -28,7 +27,8 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
 
   // Check if product is favorited
   const checkFavoriteStatus = async () => {
-    if (!user) {
+    // Only customers can have favorites
+    if (!user || user.role !== 'customer') {
       setIsFavorited(false);
       setLoadingFavorite(false);
       return;
@@ -63,6 +63,11 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
   const handleFavoriteToggle = async () => {
     if (!user) {
       navigate('/login');
+      return;
+    }
+
+    // Only customers can favorite
+    if (user.role !== 'customer') {
       return;
     }
     
@@ -132,6 +137,7 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
 
   // Check permissions - Only admins can edit/delete
   const isAdmin = user?.role === 'admin';
+  const isCustomer = user?.role === 'customer';
   const canEditDelete = isAdmin; // Only admins can edit/delete
   const canViewInactive = isAdmin || product.is_active;
 
@@ -173,8 +179,8 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
             </div>
           )}
           
-          {/* Favorite Button */}
-          {user && (
+          {/* Favorite Button - Only show for customers */}
+          {isCustomer && (
             <button
               className={`${styles.favoriteButton} ${isFavorited ? styles.favorited : ''}`}
               onClick={handleFavoriteToggle}
