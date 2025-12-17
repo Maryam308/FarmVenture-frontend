@@ -191,44 +191,11 @@ const toggleFavorite = async (itemId, itemType, isFavorited) => {
   }
 };
 
-// Helper function to debug API responses
-const debugApiResponse = async (url, options = {}) => {
-  try {
-    const token = localStorage.getItem('token');
-    console.log('Token exists:', !!token);
-    
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    
-    console.log('Response status:', res.status, res.statusText);
-    const text = await res.text();
-    console.log('Response text:', text);
-    
-    try {
-      const json = JSON.parse(text);
-      console.log('Response JSON:', json);
-      return json;
-    } catch {
-      console.log('Response is not JSON');
-      return text;
-    }
-  } catch (error) {
-    console.log('Debug fetch error:', error);
-    throw error;
-  }
-};
-
 export { 
   getFavorites, 
   getFavoriteIds,
   addFavorite, 
   removeFavorite, 
   checkFavorite,
-  toggleFavorite,
-  debugApiResponse
+  toggleFavorite
 };

@@ -16,7 +16,8 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const [dateSort, setDateSort] = useState('newest'); // 'newest', 'oldest', 'none'
+  const [priceSort, setPriceSort] = useState('none'); // 'low-high', 'high-low', 'none'
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
   const navigate = useNavigate();
@@ -31,21 +32,13 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     return ['all', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
-  // Fetch favorites for all authenticated users
+  // Fetch favorites for customers only
   const fetchFavorites = useCallback(async () => {
-    if (user) {
+    if (user && user.role === 'customer') {
       try {
         setLoadingFavorites(true);
-        console.log('Fetching favorites for user:', user.id);
-        
-        // Use getFavoriteIds for lightweight fetching
         const favoriteIds = await favoriteService.getFavoriteIds('product');
-        console.log('Received favorite IDs:', favoriteIds);
-        
-        // Convert array to Set
         const favoriteSet = new Set(favoriteIds.products || []);
-        console.log('Setting favorites to:', Array.from(favoriteSet));
-        
         setFavorites(favoriteSet);
       } catch (error) {
         console.error('Error fetching favorites:', error);
@@ -54,7 +47,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         setLoadingFavorites(false);
       }
     } else {
-      console.log('No user, clearing favorites');
       setFavorites(new Set());
       setLoadingFavorites(false);
     }
@@ -69,9 +61,12 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       navigate('/login');
       return;
     }
+
+    if (user.role !== 'customer') {
+      return;
+    }
     
     const isFavorited = favorites.has(productId);
-    console.log('Toggling favorite for product', productId, 'current state:', isFavorited);
     
     try {
       if (isFavorited) {
@@ -79,16 +74,11 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         setFavorites(prev => {
           const newSet = new Set(prev);
           newSet.delete(productId);
-          console.log('After remove, favorites:', Array.from(newSet));
           return newSet;
         });
       } else {
         await favoriteService.addFavorite(productId, 'product');
-        setFavorites(prev => {
-          const newSet = new Set([...prev, productId]);
-          console.log('After add, favorites:', Array.from(newSet));
-          return newSet;
-        });
+        setFavorites(prev => new Set([...prev, productId]));
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -125,29 +115,22 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     fetchProducts();
   }, [user, initialProducts.length, setProducts]);
 
-  // Fetch favorites on mount and when user changes
   useEffect(() => {
-    console.log('ProductList useEffect triggered, user:', user);
     fetchFavorites();
   }, [fetchFavorites]);
 
-  // Listen for favorite updates from other components
   useEffect(() => {
     const handleStorageChange = (event) => {
       if (event.key === 'favorites_updated') {
-        console.log('Favorites updated event detected, refreshing...');
         fetchFavorites();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom events
     const handleFavoriteUpdate = () => {
-      console.log('Custom favorite update event detected, refreshing...');
       fetchFavorites();
     };
-    
+
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
 
     return () => {
@@ -189,6 +172,21 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     }
   };
 
+  // Handle sort changes - reset other sort when one is selected
+  const handleDateSortChange = (value) => {
+    setDateSort(value);
+    if (value !== 'none') {
+      setPriceSort('none');
+    }
+  };
+
+  const handlePriceSortChange = (value) => {
+    setPriceSort(value);
+    if (value !== 'none') {
+      setDateSort('none');
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
@@ -214,25 +212,26 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       );
     }
 
-    switch (sortBy) {
-      case 'newest':
+    // Apply sorting - date takes priority over price
+    if (dateSort !== 'none') {
+      if (dateSort === 'newest') {
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        break;
-      case 'oldest':
+      } else if (dateSort === 'oldest') {
         filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        break;
-      case 'price-low-high':
+      }
+    } else if (priceSort !== 'none') {
+      if (priceSort === 'low-high') {
         filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high-low':
+      } else if (priceSort === 'high-low') {
         filtered.sort((a, b) => b.price - a.price);
-        break;
-      default:
-        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+    } else {
+      // Default sort by newest
+      filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
     return filtered;
-  }, [products, user, statusFilter, searchQuery, categoryFilter, sortBy]);
+  }, [products, user, statusFilter, searchQuery, categoryFilter, dateSort, priceSort]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -241,7 +240,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, sortBy, statusFilter]);
+  }, [searchQuery, categoryFilter, dateSort, priceSort, statusFilter]);
 
   const activeCount = products.filter(p => p.is_active).length;
   const inactiveCount = products.filter(p => !p.is_active).length;
@@ -285,6 +284,15 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     }
     
     return pageNumbers;
+  };
+
+  // Get sort label for display
+  const getActiveSortLabel = () => {
+    if (dateSort === 'newest') return 'Newest to Oldest';
+    if (dateSort === 'oldest') return 'Oldest to Newest';
+    if (priceSort === 'low-high') return 'Price: Low to High';
+    if (priceSort === 'high-low') return 'Price: High to Low';
+    return 'Newest to Oldest (Default)';
   };
 
   if (loading) {
@@ -364,19 +372,34 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
             </div>
 
             <div className={styles.filterGroup}>
-              <label htmlFor="sortBy" className={styles.filterLabel}>
-                Sort by:
+              <label htmlFor="dateSort" className={styles.filterLabel}>
+                Sort by Date:
               </label>
               <select
-                id="sortBy"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                id="dateSort"
+                value={dateSort}
+                onChange={(e) => handleDateSortChange(e.target.value)}
                 className={styles.filterSelect}
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="price-low-high">Price: Low to High</option>
-                <option value="price-high-low">Price: High to Low</option>
+                <option value="none">No Date Sort</option>
+                <option value="newest">Newest to Oldest</option>
+                <option value="oldest">Oldest to Newest</option>
+              </select>
+            </div>
+
+            <div className={styles.filterGroup}>
+              <label htmlFor="priceSort" className={styles.filterLabel}>
+                Sort by Price:
+              </label>
+              <select
+                id="priceSort"
+                value={priceSort}
+                onChange={(e) => handlePriceSortChange(e.target.value)}
+                className={styles.filterSelect}
+              >
+                <option value="none">No Price Sort</option>
+                <option value="low-high">Low to High</option>
+                <option value="high-low">High to Low</option>
               </select>
             </div>
           </div>
@@ -437,19 +460,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         </div>
       ) : (
         <>
-          <div className={styles.resultsInfo}>
-            <p>
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of {filteredProducts.length} products
-              {searchQuery && ` for "${searchQuery}"`}
-            </p>
-            <div className={styles.sortIndicator}>
-              {sortBy === 'price-low-high' && 'Sorted by: Price (Low to High)'}
-              {sortBy === 'price-high-low' && 'Sorted by: Price (High to Low)'}
-              {sortBy === 'newest' && 'Sorted by: Newest First'}
-              {sortBy === 'oldest' && 'Sorted by: Oldest First'}
-            </div>
-          </div>
-          
           <div className={styles.grid}>
             {currentProducts.map((product) => (
               <div key={product.id} className={styles.productCardWrapper}>
@@ -481,8 +491,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                         <div className={styles.inactiveBadge}>INACTIVE</div>
                       )}
                       
-                      {/* Favorite Button - Show for all authenticated users */}
-                      {user && (
+                      {user?.role === 'customer' && (
                         <button
                           className={`${styles.favoriteBtn} ${favorites.has(product.id) ? styles.favorited : ''}`}
                           onClick={(e) => handleFavoriteToggle(product.id, e)}
