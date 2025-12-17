@@ -1,5 +1,4 @@
-const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/activities`;
-
+const BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/activities`;
 // Get all activities (public - no auth needed for GET)
 const index = async (upcomingOnly = true, search = null) => {
   try {

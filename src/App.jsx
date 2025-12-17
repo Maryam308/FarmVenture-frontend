@@ -17,6 +17,8 @@ import Loading from "./components/Loading/Loading";
 import ActivityList from "./components/ActivityList/ActivityList";
 import ActivityDetails from "./components/ActivityDetails/ActivityDetails";
 import ActivityForm from "./components/ActivityForm/ActivityForm";
+import BookingForm from "./components/BookingForm/BookingForm";
+import BookingDetails from "./components/BookingDetails/BookingDetails";
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -193,7 +195,14 @@ const App = () => {
         {user ? (
           <>
             <Route path="/" element={<Dashboard user={user} />} />
-
+            <Route
+              path="/activities/:activityId/book"
+              element={<BookingForm user={user} />}
+            />
+            <Route
+              path="/bookings/:bookingId"
+              element={<BookingDetails user={user} />}
+            />
             <Route
               path="/activities"
               element={

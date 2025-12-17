@@ -591,6 +591,22 @@ const ActivityList = ({
                       </button>
                     </div>
                   )}
+
+                  {/* Book button for customers - Add this after admin actions */}
+                  {user?.role !== "admin" &&
+                    new Date(activity.date_time) > new Date() &&
+                    activity.is_active &&
+                    activity.current_capacity < activity.max_capacity && (
+                      <div className={styles.bookingAction}>
+                        <Link
+                          to={`/activities/${activity.id}/book`}
+                          className={styles.bookButton}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Book Now
+                        </Link>
+                      </div>
+                    )}
                 </div>
               </div>
             ))}

@@ -1,0 +1,376 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", sans-serif;
+}
+
+.bookingWrapper {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  border: 1px solid #e8e8e8;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.backButton {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.backButton:hover {
+  background: #f0f7ff;
+}
+
+.header h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
+}
+
+/* Activity Info */
+.activityInfo {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+}
+
+.activityInfo h2 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.4rem;
+}
+
+.activityDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #444;
+}
+
+.detailItem .icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+/* Cannot Book State */
+.cannotBook {
+  text-align: center;
+  padding: 2rem;
+  background: #fff8f8;
+  border-radius: 12px;
+  border: 1px solid #fcc;
+}
+
+.cannotBookIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.cannotBook h3 {
+  color: #c00;
+  margin-bottom: 1rem;
+}
+
+.cannotBook p {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.returnButton {
+  padding: 0.75rem 1.5rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.returnButton:hover {
+  background: #3a80d2;
+}
+
+/* Booking Form */
+.bookingForm {
+  margin-top: 2rem;
+}
+
+.formGroup {
+  margin-bottom: 2rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.ticketInfo {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: normal;
+  margin-top: 0.25rem;
+}
+
+.ticketSelector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 200px;
+}
+
+.ticketButton {
+  width: 44px;
+  height: 44px;
+  border: 2px solid #4a90e2;
+  background: white;
+  color: #4a90e2;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.ticketButton:hover:not(:disabled) {
+  background: #4a90e2;
+  color: white;
+}
+
+.ticketButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #ccc;
+}
+
+.ticketInput {
+  flex: 1;
+  text-align: center;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  background: white;
+}
+
+.ticketInput:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+/* Price Summary */
+.priceSummary {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e8e8e8;
+}
+
+.priceSummary h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e8e8e8;
+  color: #444;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0 0 0;
+  margin-top: 1rem;
+  border-top: 2px solid #e8e8e8;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+/* Error Message */
+.errorMessage {
+  background: #fee;
+  color: #c00;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #fcc;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+/* Booking Terms */
+.bookingTerms {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #fff8e6;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.bookingTerms strong {
+  color: #2c3e50;
+}
+
+.bookingTerms p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Form Actions */
+.formActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.cancelButton {
+  flex: 1;
+  padding: 1rem;
+  background: white;
+  color: #666;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #bbb;
+  color: #333;
+}
+
+.submitButton {
+  flex: 2;
+  padding: 1rem;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.submitButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Error State */
+.error {
+  text-align: center;
+  padding: 3rem;
+  background: #fee;
+  border-radius: 12px;
+  border: 2px solid #fcc;
+  color: #c00;
+}
+
+.error h2 {
+  margin-top: 0;
+  color: #c00;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .bookingWrapper {
+    padding: 1.5rem;
+  }
+
+  .formActions {
+    flex-direction: column;
+  }
+
+  .cancelButton,
+  .submitButton {
+    width: 100%;
+  }
+}

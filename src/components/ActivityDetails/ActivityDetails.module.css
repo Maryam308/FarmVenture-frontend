@@ -733,3 +733,29 @@
     gap: 1rem;
   }
 }
+
+/* Booking Actions */
+.bookingActions {
+  margin-top: 1rem;
+}
+
+.bookButton {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.bookButton:hover {
+  background: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}

@@ -372,10 +372,25 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </strong>{" "}
                   out of {activity.max_capacity}
                 </p>
-                <p className={styles.bookingNote}>
-                  To book this activity, please contact us or visit our farm
-                  office.
-                </p>
+
+                {user?.role !== "admin" ? (
+                  <div className={styles.bookingActions}>
+                    <Link
+                      to={`/activities/${activityId}/book`}
+                      className={styles.bookButton}
+                    >
+                      Book Now
+                    </Link>
+                    <p className={styles.bookingNote}>
+                      Secure your spot for this activity
+                    </p>
+                  </div>
+                ) : (
+                  <p className={styles.bookingNote}>
+                    To book this activity, please contact us or visit our farm
+                    office.
+                  </p>
+                )}
               </div>
             </section>
           )}
