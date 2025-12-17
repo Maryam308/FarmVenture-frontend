@@ -59,7 +59,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
       navigate("/activities");
     } catch (err) {
       setError("Failed to delete activity: " + err.message);
-      console.error("Delete error:", err);
     }
   };
 
@@ -79,7 +78,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
       );
       setHasBooked(booked);
     } catch (error) {
-      console.error("Error checking user bookings:", error);
       setHasBooked(false);
     }
   };
@@ -94,7 +92,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
       setActivity(activityData);
       setIsUpcoming(new Date(activityData.date_time) > new Date());
     } catch (err) {
-      console.error("Fetch activity error:", err);
       setError("Failed to load activity details");
     } finally {
       setLoading(false);

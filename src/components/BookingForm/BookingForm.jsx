@@ -23,14 +23,11 @@ const BookingForm = ({ user }) => {
         setLoading(true);
         setError(null);
 
-        console.log("Fetching activity:", activityId);
-
         // Fetch activity details
         const activityData = await activityService.show(activityId);
-        console.log("Activity data:", activityData);
+
         setActivity(activityData);
       } catch (err) {
-        console.error("Fetch activity error:", err);
         setError(
           "Failed to load activity details: " +
             (err.message || "Please check your connection")
@@ -86,24 +83,16 @@ const BookingForm = ({ user }) => {
         throw new Error("Please select at least 1 ticket.");
       }
 
-      console.log("Creating booking with:", {
-        activityId,
-        tickets_number: bookingData.tickets_number,
-      });
-
       // Create booking - backend will return the created booking with ID
       const createdBooking = await bookingService.createBooking(
         activityId,
         bookingData.tickets_number
       );
 
-      console.log("Booking created successfully:", createdBooking);
       window.dispatchEvent(new Event("bookingCreated"));
       // Navigate to the booking details page
       navigate(`/bookings/${createdBooking.id}`);
     } catch (err) {
-      console.error("Booking error:", err);
-
       // Handle specific error cases
       if (err.message.includes("already booked")) {
         setError(

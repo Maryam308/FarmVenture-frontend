@@ -24,7 +24,6 @@ const BookingDetails = ({ user }) => {
         const data = await bookingService.getBookingById(bookingId);
         setBooking(data);
       } catch (err) {
-        console.error("Error fetching booking:", err);
         setError(err.message || "Failed to load booking details");
       } finally {
         setLoading(false);
@@ -51,7 +50,6 @@ const BookingDetails = ({ user }) => {
         navigate("/profile");
       }, 2000);
     } catch (err) {
-      console.error("Error cancelling booking:", err);
       setPopupMessage(
         err.message || "Failed to cancel booking. Please try again."
       );
@@ -87,13 +85,11 @@ const BookingDetails = ({ user }) => {
 
   const canCancelBooking = () => {
     if (!booking || !booking.activity || !booking.activity.date_time) {
-      console.log("Missing booking data");
       return false;
     }
 
     // Check if booking is already past
     if (booking.status === "past") {
-      console.log("Booking is past");
       return false;
     }
 
@@ -105,17 +101,6 @@ const BookingDetails = ({ user }) => {
     const isAdmin = user?.role === "admin";
     const isBookingOwner = String(booking.user_id) === String(user?.id);
     const canUserCancel = isAdmin || isBookingOwner;
-
-    console.log("canCancelBooking check:", {
-      isFuture,
-      isAdmin,
-      isBookingOwner,
-      activityDate: booking.activity.date_time,
-      now: now.toISOString(),
-      userRole: user?.role,
-      userId: user?.id,
-      bookingUserId: booking.user_id,
-    });
 
     return isFuture && canUserCancel;
   };

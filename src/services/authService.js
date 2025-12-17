@@ -21,7 +21,6 @@ const signup = async (formData) => {
     }
     return json;
   } catch (err) {
-    console.log(err);
     throw err;
   }
 };
@@ -56,7 +55,6 @@ const signin = async (user) => {
       };
     }
   } catch (err) {
-    console.log(err);
     throw err;
   }
 };
@@ -81,7 +79,6 @@ const getUser = () => {
       ...payload,
     };
   } catch (error) {
-    console.error("Error decoding token:", error);
     return null;
   }
 };

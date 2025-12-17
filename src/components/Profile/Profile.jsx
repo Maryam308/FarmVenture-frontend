@@ -39,7 +39,6 @@ const Profile = ({ user }) => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-        console.log("Profile: No user found");
         setLoading(false);
         return;
       }
@@ -48,34 +47,26 @@ const Profile = ({ user }) => {
         setLoading(true);
         setError(null);
 
-        console.log("Profile: User object:", user);
-
         if (user.role === "admin") {
           // Admin: fetch bookings only
-          console.log("Profile: Fetching bookings for admin");
+
           await fetchBookings();
         } else if (user.role === "customer") {
           // Customer: fetch favorites
-          console.log("Profile: Fetching favorites for customer");
 
           const allFavorites = await favoriteService.getFavorites();
-          console.log("Profile: Received favorites data:", allFavorites);
 
           const products = [];
           const activities = [];
 
           allFavorites.forEach((fav, index) => {
-            console.log(`Processing favorite ${index}:`, fav);
-
             if (fav.item_type === "product" && fav.item) {
-              console.log("Found product favorite with item data:", fav.item);
               products.push({
                 ...fav.item,
                 favorite_id: fav.id,
                 favorited_at: fav.created_at,
               });
             } else if (fav.item_type === "activity" && fav.item) {
-              console.log("Found activity favorite with item data:", fav.item);
               activities.push({
                 ...fav.item,
                 favorite_id: fav.id,
@@ -84,8 +75,6 @@ const Profile = ({ user }) => {
             }
           });
 
-          console.log("Profile: Products found:", products.length);
-          console.log("Profile: Activities found:", activities.length);
           setFavoriteProducts(products);
           setFavoriteActivities(activities);
 
@@ -93,10 +82,8 @@ const Profile = ({ user }) => {
           await fetchBookings();
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error);
         setError(error.message || "Failed to load profile data");
       } finally {
-        console.log("Profile: Setting loading to false");
         setLoading(false);
       }
     };
@@ -110,7 +97,6 @@ const Profile = ({ user }) => {
 
     try {
       setLoadingBookings(true);
-      console.log("Fetching bookings for user:", user);
 
       let bookingsData = [];
 
@@ -122,10 +108,8 @@ const Profile = ({ user }) => {
         bookingsData = await bookingService.getMyBookings();
       }
 
-      console.log("Bookings fetched:", bookingsData);
       setBookings(bookingsData || []);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
       setBookings([]);
     } finally {
       setLoadingBookings(false);
@@ -137,13 +121,8 @@ const Profile = ({ user }) => {
     if (!user || user.role !== "customer") return;
 
     const handleFavoriteUpdate = async () => {
-      console.log(
-        "Profile: Favorite update event received, refreshing favorites"
-      );
-
       try {
         const allFavorites = await favoriteService.getFavorites();
-        console.log("Profile: Refreshed favorites:", allFavorites);
 
         const products = [];
         const activities = [];
@@ -166,9 +145,7 @@ const Profile = ({ user }) => {
 
         setFavoriteProducts(products);
         setFavoriteActivities(activities);
-      } catch (error) {
-        console.error("Error refreshing favorites:", error);
-      }
+      } catch (error) {}
     };
 
     window.addEventListener("favoriteUpdated", handleFavoriteUpdate);
@@ -224,9 +201,7 @@ const Profile = ({ user }) => {
 
       localStorage.setItem("favorites_updated", Date.now().toString());
       window.dispatchEvent(new Event("favoriteUpdated"));
-    } catch (error) {
-      console.error("Error toggling favorite from profile:", error);
-    }
+    } catch (error) {}
   };
 
   // Handle cancel booking click
@@ -252,7 +227,6 @@ const Profile = ({ user }) => {
       // Clear selected booking
       setSelectedBookingId(null);
     } catch (error) {
-      console.error("Error cancelling booking:", error);
       setPopupMessage(error.message || "Failed to cancel booking");
       setShowErrorPopup(true);
     } finally {

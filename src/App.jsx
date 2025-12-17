@@ -56,9 +56,7 @@ const App = () => {
           activity.id === activityId ? updatedActivity : activity
         )
       );
-    } catch (error) {
-      console.error("Error updating activity after booking:", error);
-    }
+    } catch (error) {}
   };
 
   const handleAddProduct = async (productFormData) => {
@@ -109,7 +107,6 @@ const App = () => {
       setActivities([newActivity, ...activities]);
       navigate("/activities");
     } catch (error) {
-      console.error("Error adding activity:", error);
       throw error;
     }
   };
@@ -121,7 +118,6 @@ const App = () => {
         activities.filter((activity) => activity.id !== activityId)
       );
     } catch (error) {
-      console.error("Error deleting activity:", error);
       throw error;
     }
   };
@@ -139,7 +135,6 @@ const App = () => {
       );
       return updatedActivity;
     } catch (error) {
-      console.error("Error updating activity:", error);
       throw error;
     }
   };
@@ -178,16 +173,15 @@ const App = () => {
         // If user is admin, fetch all activities
         if (user?.role === "admin") {
           const activityData = await activityService.getAllActivitiesAdmin();
-          console.log("Fetched admin activities:", activityData);
+
           setActivities(activityData);
         } else {
           // Regular users only see active activities
           const activityData = await activityService.index(false);
-          console.log("Fetched public activities:", activityData);
+
           setActivities(activityData);
         }
       } catch (error) {
-        console.error("Error fetching activities:", error);
       } finally {
         setLoadingActivities(false);
       }

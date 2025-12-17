@@ -42,9 +42,7 @@ const ActivityList = ({
       try {
         const bookings = await bookingService.getMyBookings();
         setUserBookings(bookings);
-      } catch (error) {
-        console.error("Error fetching user bookings:", error);
-      }
+      } catch (error) {}
     }
   };
 
@@ -57,7 +55,6 @@ const ActivityList = ({
         setLocalActivities(allActivities);
         if (setActivities) setActivities(allActivities);
       } catch (error) {
-        console.error("Error fetching admin activities:", error);
       } finally {
         setLoading(false);
       }
@@ -68,7 +65,6 @@ const ActivityList = ({
         setLocalActivities(publicActivities);
         if (setActivities) setActivities(publicActivities);
       } catch (error) {
-        console.error("Error fetching public activities:", error);
       } finally {
         setLoading(false);
       }
@@ -163,7 +159,6 @@ const ActivityList = ({
         );
       }
     } catch (error) {
-      console.error("Error deleting activity:", error);
       const errorMessage = error.message || "Unknown error occurred";
       setErrorMessage(`Failed to delete activity: ${errorMessage}`);
       setShowErrorPopup(true);
