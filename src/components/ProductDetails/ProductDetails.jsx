@@ -56,11 +56,10 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
   if (error) return <div className={styles.error}>{error}</div>;
   if (!product) return <div className={styles.error}>Product not found</div>;
 
-  // Check permissions
-  const isOwner = user && product.user.id === user.id;
+  // Check permissions - Only admins can edit/delete
   const isAdmin = user?.role === 'admin';
-  const canEditDelete = isOwner || isAdmin;
-  const canViewInactive = isOwner || isAdmin || product.is_active;
+  const canEditDelete = isAdmin; // Only admins can edit/delete
+  const canViewInactive = isAdmin || product.is_active;
 
   // If product is inactive and user cannot view it, show not found
   if (!product.is_active && !canViewInactive) {

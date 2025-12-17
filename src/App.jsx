@@ -131,12 +131,17 @@ const App = () => {
                 handleDeleteProduct={handleDeleteProduct} 
               />
             } />
-            <Route path="/products/new" element={
-              <ProductForm handleAddProduct={handleAddProduct} />
-            } />
-            <Route path="/products/:productId/edit" element={
-              <ProductForm handleUpdateProduct={handleUpdateProduct} />
-            } />
+            {/* Only show product creation form for admins */}
+            {user?.role === 'admin' && (
+              <>
+                <Route path="/products/new" element={
+                  <ProductForm handleAddProduct={handleAddProduct} />
+                } />
+                <Route path="/products/:productId/edit" element={
+                  <ProductForm handleUpdateProduct={handleUpdateProduct} />
+                } />
+              </>
+            )}
             <Route path="/profile" element={<Profile user={user} />} />
           </>
         ) : (
