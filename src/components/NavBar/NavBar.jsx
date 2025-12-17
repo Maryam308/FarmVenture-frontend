@@ -5,7 +5,7 @@ import styles from './NavBar.module.css';
 const NavBar = ({ user, handleSignout }) => {
   return (
     <>
-      { user ? (
+      {user ? (
         <nav className={styles.container}>
           <ul>
             <li><Link to="/">Home</Link></li>

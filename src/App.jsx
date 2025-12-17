@@ -12,12 +12,14 @@ import ProductForm from './components/ProductForm/ProductForm';
 import Profile from './components/Profile/Profile';
 import * as authService from '../src/services/authService';
 import * as productService from './services/productService';
+import * as activityService from "./services/activitiesService";
 import Loading from './components/Loading/Loading';
 
 const App = () => {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [products, setProducts] = useState([]);
+  const [activities, setActivities] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
   const navigate = useNavigate();
@@ -112,9 +114,14 @@ const App = () => {
     <>
       <NavBar user={user} handleSignout={handleSignout} />
       <Routes>
-        { user ? (
+        {user ? (
           <>
             <Route path="/" element={<Dashboard user={user} />} />
+
+            <Route
+              path="/activities"
+              element={<ActivityList activities={activities} />}
+            />
             <Route 
               path="/products" 
               element={
@@ -160,8 +167,8 @@ const App = () => {
             <Route path="/products/:productId" element={<ProductDetails />} />
           </>
         )}
-        <Route path='/signup' element={<SignupForm setUser={setUser} />} />
-        <Route path='/signin' element={<SigninForm setUser={setUser} />} />
+        <Route path="/signup" element={<SignupForm setUser={setUser} />} />
+        <Route path="/signin" element={<SigninForm setUser={setUser} />} />
       </Routes>
     </>
   );
