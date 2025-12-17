@@ -1,10 +1,8 @@
 // src/components/ActivityList/ActivityList.jsx
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./ActivityList.module.css";
-import AuthorInfo from "../AuthorInfo/AuthorInfo";
 import * as activityService from "../../services/activitiesService";
-import * as favoriteService from "../../services/favoriteService";
 
 const ActivityList = ({
   user,
@@ -14,8 +12,6 @@ const ActivityList = ({
   const [statusFilter, setStatusFilter] = useState("upcoming");
   const [loading, setLoading] = useState(!initialActivities.length);
   const [activities, setLocalActivities] = useState(initialActivities);
-  const [favorites, setFavorites] = useState(new Set());
-  const [loadingFavorites, setLoadingFavorites] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -36,7 +32,7 @@ const ActivityList = ({
 
   // Format price with 2 decimal places
   const formatPrice = (price) => {
-    return `$${parseFloat(price).toFixed(2)}`;
+    return `BHD${parseFloat(price).toFixed(2)}`;
   };
 
   // Format duration to hours/minutes
@@ -69,76 +65,6 @@ const ActivityList = ({
     });
   };
 
-  // Fetch favorites for all authenticated users
-  const fetchFavorites = useCallback(async () => {
-    if (user) {
-      try {
-        setLoadingFavorites(true);
-        console.log("Fetching favorites for user:", user.id);
-
-        const favoriteIds = await favoriteService.getFavoriteIds("activity");
-        console.log("Received favorite IDs:", favoriteIds);
-
-        const favoriteSet = new Set(favoriteIds.activities || []);
-        console.log("Setting favorites to:", Array.from(favoriteSet));
-
-        setFavorites(favoriteSet);
-      } catch (error) {
-        console.error("Error fetching favorites:", error);
-        setFavorites(new Set());
-      } finally {
-        setLoadingFavorites(false);
-      }
-    } else {
-      console.log("No user, clearing favorites");
-      setFavorites(new Set());
-      setLoadingFavorites(false);
-    }
-  }, [user]);
-
-  // Handle favorite toggle
-  const handleFavoriteToggle = async (activityId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    const isFavorited = favorites.has(activityId);
-    console.log(
-      "Toggling favorite for activity",
-      activityId,
-      "current state:",
-      isFavorited
-    );
-
-    try {
-      if (isFavorited) {
-        await favoriteService.removeFavorite(activityId, "activity");
-        setFavorites((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(activityId);
-          console.log("After remove, favorites:", Array.from(newSet));
-          return newSet;
-        });
-      } else {
-        await favoriteService.addFavorite(activityId, "activity");
-        setFavorites((prev) => {
-          const newSet = new Set([...prev, activityId]);
-          console.log("After add, favorites:", Array.from(newSet));
-          return newSet;
-        });
-      }
-
-      // Trigger custom event for other components
-      window.dispatchEvent(new Event("favoriteUpdated"));
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-    }
-  };
-
   useEffect(() => {
     const fetchActivities = async () => {
       if (user?.role === "admin") {
@@ -169,57 +95,15 @@ const ActivityList = ({
     fetchActivities();
   }, [user, initialActivities.length, setActivities]);
 
-  // Fetch favorites on mount and when user changes
-  useEffect(() => {
-    console.log("ActivityList useEffect triggered, user:", user);
-    fetchFavorites();
-  }, [fetchFavorites]);
+  const handleDelete = async (activityId, e) => {
+    e.preventDefault(); // Prevent link navigation
+    e.stopPropagation(); // Prevent card click
 
-  // Listen for favorite updates from other components
-  useEffect(() => {
-    const handleStorageChange = (event) => {
-      if (event.key === "favorites_updated") {
-        console.log("Favorites updated event detected, refreshing...");
-        fetchFavorites();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    const handleFavoriteUpdate = () => {
-      console.log("Custom favorite update event detected, refreshing...");
-      fetchFavorites();
-    };
-
-    window.addEventListener("favoriteUpdated", handleFavoriteUpdate);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("favoriteUpdated", handleFavoriteUpdate);
-    };
-  }, [fetchFavorites]);
-
-  const handleToggleStatus = async (activityId, currentStatus) => {
-    try {
-      const updatedActivity = await activityService.toggleStatus(activityId);
-
-      setLocalActivities((prev) =>
-        prev.map((a) => (a.id === activityId ? updatedActivity : a))
-      );
-
-      if (setActivities) {
-        setActivities((prev) =>
-          prev.map((a) => (a.id === activityId ? updatedActivity : a))
-        );
-      }
-    } catch (error) {
-      console.error("Error toggling activity status:", error);
-      alert("Failed to update activity status: " + error.message);
-    }
-  };
-
-  const handleDelete = async (activityId) => {
-    if (!window.confirm("Are you sure you want to delete this activity?")) {
+    if (
+      !window.confirm(
+        "WARNING: This will PERMANENTLY DELETE the activity from the database. This action cannot be undone. Are you sure?"
+      )
+    ) {
       return;
     }
 
@@ -231,7 +115,39 @@ const ActivityList = ({
       }
     } catch (error) {
       console.error("Error deleting activity:", error);
-      alert("Failed to delete activity: " + error.message);
+      const errorMessage = error.message || "Unknown error occurred";
+      alert(`Failed to delete activity: ${errorMessage}`);
+    }
+  };
+
+  const handleToggleStatus = async (activityId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const activity = activities.find((a) => a.id === activityId);
+    const action = activity.is_active ? "deactivate" : "activate";
+
+    if (!window.confirm(`Are you sure you want to ${action} this activity?`)) {
+      return;
+    }
+
+    try {
+      const updatedActivity = await activityService.toggleStatus(activityId);
+
+      // Update the activity in state
+      setLocalActivities((prev) =>
+        prev.map((a) => (a.id === activityId ? updatedActivity : a))
+      );
+
+      if (setActivities) {
+        setActivities((prev) =>
+          prev.map((a) => (a.id === activityId ? updatedActivity : a))
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling activity status:", error);
+      const errorMessage = error.message || "Unknown error occurred";
+      alert(`Failed to ${action} activity: ${errorMessage}`);
     }
   };
 
@@ -578,159 +494,152 @@ const ActivityList = ({
           <div className={styles.grid}>
             {currentActivities.map((activity) => (
               <div key={activity.id} className={styles.activityCardWrapper}>
-                <Link
-                  to={`/activities/${activity.id}`}
-                  className={styles.activityCard}
-                >
-                  <article>
-                    <div className={styles.imageContainer}>
-                      {activity.image_url ? (
-                        <img
-                          src={activity.image_url}
-                          alt={activity.title}
-                          className={styles.activityImage}
-                        />
-                      ) : (
-                        <div className={styles.noImage}>
-                          <span>🌾</span>
-                          <p>No Image</p>
-                        </div>
-                      )}
-
-                      {/* Status badges */}
-                      {new Date(activity.date_time) > new Date() ? (
-                        <div className={styles.upcomingBadge}>UPCOMING</div>
-                      ) : (
-                        <div className={styles.pastBadge}>PAST</div>
-                      )}
-
-                      {!activity.is_active && (
-                        <div className={styles.inactiveBadge}>INACTIVE</div>
-                      )}
-
-                      {/* Capacity indicator */}
-                      {activity.current_capacity >= activity.max_capacity && (
-                        <div className={styles.soldOutBadge}>SOLD OUT</div>
-                      )}
-
-                      {/* Favorite Button */}
-                      {user && (
-                        <button
-                          className={`${styles.favoriteBtn} ${
-                            favorites.has(activity.id) ? styles.favorited : ""
-                          }`}
-                          onClick={(e) => handleFavoriteToggle(activity.id, e)}
-                          aria-label={
-                            favorites.has(activity.id)
-                              ? "Remove from favorites"
-                              : "Add to favorites"
-                          }
-                          disabled={loadingFavorites}
-                        >
-                          {favorites.has(activity.id) ? "❤️" : "🤍"}
-                        </button>
-                      )}
-                    </div>
-
-                    <div className={styles.activityContent}>
-                      <header>
-                        <div className={styles.activityHeader}>
-                          <h2>{activity.title}</h2>
-                          <div className={styles.priceTag}>
-                            {formatPrice(activity.price)}
-                            <span>/person</span>
+                <div className={styles.activityCard}>
+                  <Link
+                    to={`/activities/${activity.id}`}
+                    className={styles.cardLink}
+                  >
+                    <article>
+                      <div className={styles.imageContainer}>
+                        {activity.image_url ? (
+                          <img
+                            src={activity.image_url}
+                            alt={activity.title}
+                            className={styles.activityImage}
+                          />
+                        ) : (
+                          <div className={styles.noImage}>
+                            <span>🌾</span>
+                            <p>No Image</p>
                           </div>
-                        </div>
-                        <AuthorInfo content={activity} />
-                      </header>
+                        )}
 
-                      <div className={styles.datetimeInfo}>
-                        <span className={styles.iconText}>📅</span>
-                        <span className={styles.date}>
-                          {formatDate(activity.date_time)}
-                        </span>
-                        <span className={styles.time}>
-                          {formatTime(activity.date_time)}
-                        </span>
+                        {/* Status badges */}
+                        {new Date(activity.date_time) > new Date() ? (
+                          <div className={styles.upcomingBadge}>UPCOMING</div>
+                        ) : (
+                          <div className={styles.pastBadge}>PAST</div>
+                        )}
+
+                        {!activity.is_active && (
+                          <div className={styles.inactiveBadge}>INACTIVE</div>
+                        )}
+
+                        {/* Capacity indicator */}
+                        {activity.current_capacity >= activity.max_capacity && (
+                          <div className={styles.soldOutBadge}>SOLD OUT</div>
+                        )}
                       </div>
 
-                      <p className={styles.description}>
-                        {activity.description}
-                      </p>
+                      <div className={styles.activityContent}>
+                        <header>
+                          <div className={styles.activityHeader}>
+                            <h2>{activity.title}</h2>
+                            <div className={styles.priceTag}>
+                              {formatPrice(activity.price)}
+                              <span>/person</span>
+                            </div>
+                          </div>
+                        </header>
 
-                      <div className={styles.activityDetails}>
-                        <div className={styles.detailItem}>
-                          <span className={styles.iconText}>⏰</span>
-                          <span>
-                            {formatDuration(activity.duration_minutes)}
+                        <div className={styles.datetimeInfo}>
+                          <span className={styles.iconText}>📅</span>
+                          <span className={styles.date}>
+                            {formatDate(activity.date_time)}
+                          </span>
+                          <span className={styles.time}>
+                            {formatTime(activity.date_time)}
                           </span>
                         </div>
 
-                        <div className={styles.detailItem}>
-                          <span className={styles.iconText}>👥</span>
-                          <span>
-                            {activity.current_capacity} of{" "}
-                            {activity.max_capacity} booked
-                          </span>
-                          <span className={styles.spotsLeft}>
-                            ({activity.max_capacity - activity.current_capacity}{" "}
-                            spots left)
-                          </span>
-                        </div>
+                        <p className={styles.description}>
+                          {activity.description}
+                        </p>
 
-                        {activity.category && (
+                        <div className={styles.activityDetails}>
                           <div className={styles.detailItem}>
-                            <span className={styles.iconText}>🏷️</span>
-                            <span className={styles.category}>
-                              {activity.category}
+                            <span className={styles.iconText}>⏰</span>
+                            <span>
+                              {formatDuration(activity.duration_minutes)}
                             </span>
                           </div>
-                        )}
-                      </div>
 
-                      <div className={styles.activityFooter}>
-                        <span
-                          className={`${styles.status} ${
-                            activity.is_active ? styles.active : styles.inactive
-                          }`}
-                        >
-                          {activity.is_active ? "✓ Active" : "✗ Inactive"}
-                        </span>
-                        {activity.location && (
-                          <span className={styles.location}>
-                            <span className={styles.iconText}>📍</span>
-                            {activity.location}
+                          <div className={styles.detailItem}>
+                            <span className={styles.iconText}>👥</span>
+                            <span>
+                              {activity.current_capacity} of{" "}
+                              {activity.max_capacity} booked
+                            </span>
+                            <span className={styles.spotsLeft}>
+                              (
+                              {activity.max_capacity -
+                                activity.current_capacity}{" "}
+                              spots left)
+                            </span>
+                          </div>
+
+                          {activity.category && (
+                            <div className={styles.detailItem}>
+                              <span className={styles.iconText}>🏷️</span>
+                              <span className={styles.category}>
+                                {activity.category}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className={styles.activityFooter}>
+                          <span
+                            className={`${styles.status} ${
+                              activity.is_active
+                                ? styles.active
+                                : styles.inactive
+                            }`}
+                          >
+                            {activity.is_active ? "✓ Active" : "✗ Inactive"}
                           </span>
-                        )}
+                          {activity.location && (
+                            <span className={styles.location}>
+                              <span className={styles.iconText}>📍</span>
+                              {activity.location}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                </Link>
+                    </article>
+                  </Link>
 
-                {user?.role === "admin" && (
-                  <div className={styles.adminActions}>
-                    <button
-                      onClick={() =>
-                        handleToggleStatus(activity.id, activity.is_active)
-                      }
-                      className={styles.toggleActiveBtn}
-                    >
-                      {activity.is_active ? "Deactivate" : "Activate"}
-                    </button>
-                    <Link
-                      to={`/activities/${activity.id}/edit`}
-                      className={styles.editBtn}
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(activity.id)}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+                  {/* Admin actions inside the card */}
+                  {user?.role === "admin" && (
+                    <div className={styles.adminActions}>
+                      <Link
+                        to={`/activities/${activity.id}/edit`}
+                        className={styles.editBtn}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Edit
+                      </Link>
+
+                      <button
+                        onClick={(e) => handleToggleStatus(activity.id, e)}
+                        className={`${styles.statusBtn} ${
+                          activity.is_active
+                            ? styles.deactivateBtn
+                            : styles.activateBtn
+                        }`}
+                      >
+                        {activity.is_active ? "Deactivate" : "Activate"}
+                      </button>
+
+                      <button
+                        onClick={(e) => handleDelete(activity.id, e)}
+                        className={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

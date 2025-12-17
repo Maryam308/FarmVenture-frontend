@@ -86,7 +86,6 @@ const update = async (activityId, activityFormData) => {
   }
 };
 
-// Delete/Deactivate activity (ADMIN ONLY - soft delete)
 const remove = async (activityId) => {
   try {
     const res = await fetch(`${BASE_URL}/${activityId}`, {
@@ -108,7 +107,7 @@ const remove = async (activityId) => {
   }
 };
 
-// Toggle activity status active/inactive (ADMIN ONLY)
+// Toggle status (activate/deactivate) - uses PATCH /activities/{id}/toggle
 const toggleStatus = async (activityId) => {
   try {
     const res = await fetch(`${BASE_URL}/${activityId}/toggle`, {
@@ -129,7 +128,6 @@ const toggleStatus = async (activityId) => {
     throw error;
   }
 };
-
 // Get all activities for admin (ADMIN ONLY - requires token)
 const getAllActivitiesAdmin = async () => {
   try {

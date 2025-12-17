@@ -12,7 +12,8 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     title: "",
     description: "",
     price: "",
-    date_time: "",
+    date: "",
+    time: "09:00",
     duration_minutes: "60",
     max_capacity: "20",
     location: "",
@@ -34,6 +35,7 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     "cooking_class",
     "other",
   ];
+
   const durations = [
     { value: "30", label: "30 minutes" },
     { value: "60", label: "1 hour" },
@@ -42,6 +44,20 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     { value: "180", label: "3 hours" },
     { value: "240", label: "4 hours" },
   ];
+
+  // Generate time options with 15-minute intervals
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute of ["00", "15", "30", "45"]) {
+        const timeString = `${hour.toString().padStart(2, "0")}:${minute}`;
+        options.push(timeString);
+      }
+    }
+    return options;
+  };
+
+  const timeOptions = generateTimeOptions();
 
   const handleChange = (event) => {
     const { name, value, type } = event.target;
@@ -90,18 +106,45 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     setLoading(true);
     setError("");
 
+    // Validate required fields
+    if (!formData.image_url) {
+      setError("Activity image is required");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.category) {
+      setError("Category is required");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.location) {
+      setError("Location is required");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.date || !formData.time) {
+      setError("Date and time are required");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Format date_time to ISO string
+      // Combine date and time into ISO string
+      const dateTime = new Date(`${formData.date}T${formData.time}`);
+
       const submitData = {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price),
-        date_time: new Date(formData.date_time).toISOString(),
+        date_time: dateTime.toISOString(),
         duration_minutes: parseInt(formData.duration_minutes),
         max_capacity: parseInt(formData.max_capacity),
-        location: formData.location || null,
-        category: formData.category || null,
-        image_url: formData.image_url || null,
+        location: formData.location,
+        category: formData.category,
+        image_url: formData.image_url,
         is_active: formData.is_active,
       };
 
@@ -122,13 +165,25 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     }
   };
 
-  // Format date for datetime-local input
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const offset = date.getTimezoneOffset();
-    const adjustedDate = new Date(date.getTime() - offset * 60000);
-    return adjustedDate.toISOString().slice(0, 16);
+  // Get today's date in YYYY-MM-DD format for min date
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
+  // Format date for display
+  const formatDateTimeDisplay = (dateString, timeString) => {
+    if (!dateString || !timeString) return "Not set";
+    const date = new Date(`${dateString}T${timeString}`);
+    return date.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   useEffect(() => {
@@ -139,11 +194,28 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           const activityData = await activityService.show(activityId);
           console.log("Fetched activity data:", activityData);
 
+          // Parse existing date_time
+          let date = "";
+          let time = "09:00";
+
+          if (activityData.date_time) {
+            const activityDate = new Date(activityData.date_time);
+            date = activityDate.toISOString().split("T")[0];
+
+            // Round minutes to nearest 15 minutes
+            const minutes = activityDate.getMinutes();
+            const roundedMinutes = Math.round(minutes / 15) * 15;
+            const hour = activityDate.getHours().toString().padStart(2, "0");
+            const minute = roundedMinutes.toString().padStart(2, "0");
+            time = `${hour}:${minute}`;
+          }
+
           setFormData({
             title: activityData.title,
             description: activityData.description,
             price: activityData.price.toString(),
-            date_time: formatDateForInput(activityData.date_time),
+            date: date,
+            time: time,
             duration_minutes: activityData.duration_minutes?.toString() || "60",
             max_capacity: activityData.max_capacity?.toString() || "20",
             location: activityData.location || "",
@@ -163,13 +235,6 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     fetchActivity();
   }, [activityId]);
 
-  // Set minimum date/time to current time
-  const getMinDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  };
-
   return (
     <main className={styles.container}>
       <form onSubmit={handleSubmit} className={styles.form}>
@@ -177,9 +242,9 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
 
         {error && <div className={styles.error}>{error}</div>}
 
-        {/* Image Upload Section */}
+        {/* Image Upload Section - REQUIRED */}
         <div className={styles.formGroup}>
-          <label htmlFor="image">Activity Image (Optional)</label>
+          <label htmlFor="image">Activity Image *</label>
 
           <div className={styles.imageSection}>
             {formData.image_url ? (
@@ -193,9 +258,9 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
                   >
                     Remove Image
                   </button>
-                  <p className={styles.imageUrl}>
-                    Image URL: {formData.image_url.substring(0, 50)}...
-                  </p>
+                  <span className={styles.imageStatus}>
+                    ✓ Image uploaded successfully
+                  </span>
                 </div>
               </div>
             ) : (
@@ -207,12 +272,13 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
                   onChange={handleImageSelect}
                   className={styles.fileInput}
                   disabled={uploading}
+                  required={!activityId}
                 />
                 <label htmlFor="image" className={styles.uploadButton}>
                   {uploading ? "Uploading..." : "Choose Image"}
                 </label>
                 <p className={styles.uploadHint}>
-                  JPG, PNG, GIF • Max 5MB • Optional
+                  JPG, PNG, GIF • Max 5MB • Required
                 </p>
               </div>
             )}
@@ -253,7 +319,7 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
         {/* Price and Category */}
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
-            <label htmlFor="price">Price per person ($) *</label>
+            <label htmlFor="price">Price per person (BHD) *</label>
             <input
               type="number"
               id="price"
@@ -268,12 +334,13 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label htmlFor="category">Category (Optional)</label>
+            <label htmlFor="category">Category *</label>
             <select
               id="category"
               name="category"
               value={formData.category}
               onChange={handleChange}
+              required
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -288,21 +355,45 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           </div>
         </div>
 
-        {/* Date and Time */}
-        <div className={styles.formGroup}>
-          <label htmlFor="date_time">Date & Time *</label>
-          <input
-            type="datetime-local"
-            id="date_time"
-            name="date_time"
-            value={formData.date_time}
-            onChange={handleChange}
-            required
-            min={getMinDateTime()}
-          />
-          <p className={styles.formHelp}>
-            Choose a date and time in the future for the activity
-          </p>
+        {/* Date and Time Picker - Split into date and time */}
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label htmlFor="date">Date *</label>
+            <input
+              type="date"
+              id="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              min={getMinDate()}
+              className={styles.dateInput}
+            />
+            <p className={styles.formHelp}>Choose a future date</p>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="time">Start Time *</label>
+            <select
+              id="time"
+              name="time"
+              value={formData.time}
+              onChange={handleChange}
+              required
+              className={styles.timeSelect}
+            >
+              {timeOptions.map((time) => (
+                <option key={time} value={time}>
+                  {new Date(`2000-01-01T${time}`).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </option>
+              ))}
+            </select>
+            <p className={styles.formHelp}>15-minute intervals</p>
+          </div>
         </div>
 
         {/* Duration and Capacity */}
@@ -340,9 +431,9 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Location - REQUIRED */}
         <div className={styles.formGroup}>
-          <label htmlFor="location">Location (Optional)</label>
+          <label htmlFor="location">Location *</label>
           <input
             type="text"
             id="location"
@@ -351,8 +442,8 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
             onChange={handleChange}
             maxLength="100"
             placeholder="e.g., Main Barn, Meeting Point"
+            required
           />
-          <p className={styles.formHelp}>Leave empty for default location</p>
         </div>
 
         {/* Active/Inactive Radio Buttons (Only for editing) */}
@@ -414,10 +505,8 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
                 <strong>Title:</strong> {formData.title}
               </p>
               <p>
-                <strong>Date:</strong>{" "}
-                {formData.date_time
-                  ? new Date(formData.date_time).toLocaleString()
-                  : "Not set"}
+                <strong>Date & Time:</strong>{" "}
+                {formatDateTimeDisplay(formData.date, formData.time)}
               </p>
               <p>
                 <strong>Duration:</strong>{" "}
@@ -425,7 +514,7 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
                   ?.label || "Not set"}
               </p>
               <p>
-                <strong>Price:</strong> $
+                <strong>Price:</strong> BHD
                 {parseFloat(formData.price || 0).toFixed(2)} per person
               </p>
               <p>
