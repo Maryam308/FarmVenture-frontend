@@ -1,4 +1,3 @@
-// src/components/NavBar/NavBar.jsx
 import { Link } from "react-router-dom";
 import styles from "./NavBar.module.css";
 
@@ -18,7 +17,12 @@ const NavBar = ({ user, handleSignout }) => {
               <Link to="/activities">Activities</Link>
             </li>
             <li>
-              <Link to="/profile">Profile</Link>
+              {/* Show "Bookings" for admin, "Profile" for customer */}
+              {user.role === "admin" ? (
+                <Link to="/profile">Bookings</Link>
+              ) : (
+                <Link to="/profile">Profile</Link>
+              )}
             </li>
             <li>
               <Link to="" onClick={handleSignout}>
