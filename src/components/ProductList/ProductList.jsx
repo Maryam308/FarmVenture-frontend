@@ -116,7 +116,15 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   return (
     <main className={styles.container}>
       <div className={styles.headerSection}>
-        <h1>Farm Products</h1>
+        <div className={styles.titleRow}>
+          <h1>Farm Products</h1>
+          {/* Create Product Button - Only for admins */}
+          {user?.role === 'admin' && (
+            <Link to="/products/new" className={styles.createButton}>
+              + Create Product
+            </Link>
+          )}
+        </div>
         
         {/* Product Stats */}
         <div className={styles.stats}>
@@ -175,12 +183,13 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
             {user?.role === 'admin' 
               ? 'No products found with the current filter.'
               : showInactive 
-                ? 'No products available. Add your first product!' 
+                ? 'No products available.' 
                 : 'No active products available. Try showing inactive products.'}
           </p>
-          {user && (
+          {/* Only show "Add New Product" button for admins */}
+          {user?.role === 'admin' && (
             <Link to="/products/new" className={styles.addButton}>
-              Add New Product
+              Create Your First Product
             </Link>
           )}
         </div>
@@ -231,14 +240,14 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                     <div className={styles.productFooter}>
                       <span className={styles.price}>${product.price.toFixed(2)}</span>
                       <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
-                        {product.is_active ? '✅ Active' : '❌ Inactive'}
+                        {product.is_active ? ' Active' : ' Inactive'}
                       </span>
                     </div>
                   </div>
                 </article>
               </Link>
               
-              {/* Admin Action Buttons */}
+              {/* Admin Action Buttons - Only show for admins */}
               {user?.role === 'admin' && (
                 <div className={styles.adminActions}>
                   <button
