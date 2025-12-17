@@ -47,6 +47,20 @@ const App = () => {
     navigate("/");
   };
 
+  const handleBookingCreated = async (activityId) => {
+    try {
+      // Refresh the specific activity
+      const updatedActivity = await activityService.show(activityId);
+      setActivities((prevActivities) =>
+        prevActivities.map((activity) =>
+          activity.id === activityId ? updatedActivity : activity
+        )
+      );
+    } catch (error) {
+      console.error("Error updating activity after booking:", error);
+    }
+  };
+
   const handleAddProduct = async (productFormData) => {
     try {
       const newProduct = await productService.createProduct(productFormData);
@@ -197,7 +211,12 @@ const App = () => {
             <Route path="/" element={<Dashboard user={user} />} />
             <Route
               path="/activities/:activityId/book"
-              element={<BookingForm user={user} />}
+              element={
+                <BookingForm
+                  user={user}
+                  onBookingCreated={handleBookingCreated}
+                />
+              }
             />
             <Route
               path="/bookings/:bookingId"

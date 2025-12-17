@@ -22,6 +22,26 @@ const index = async (upcomingOnly = true, search = null) => {
   }
 };
 
+const getAllForUser = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.detail || "Failed to fetch user bookings");
+    }
+
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching user bookings:", error);
+    throw error;
+  }
+};
+
 // Get single activity by ID (public - no auth needed for GET)
 const show = async (activityId) => {
   try {
@@ -184,4 +204,5 @@ export {
   toggleStatus,
   getAllActivitiesAdmin,
   uploadImage,
+  getAllForUser,
 };

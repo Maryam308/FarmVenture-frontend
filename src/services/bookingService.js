@@ -253,14 +253,6 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
       };
     }
 
-    // Check if activity is active
-    if (!activity.is_active) {
-      return {
-        available: false,
-        message: "This activity is currently inactive",
-      };
-    }
-
     // Check capacity
     const spotsLeft = activity.max_capacity - activity.current_capacity;
     console.log(
@@ -319,7 +311,6 @@ const checkBookingAvailability = async (activityId, ticketsNumber = 1) => {
         price: parseFloat(activity.price) || 0,
         max_capacity: activity.max_capacity,
         current_capacity: activity.current_capacity,
-        is_active: activity.is_active,
       },
     };
   } catch (error) {

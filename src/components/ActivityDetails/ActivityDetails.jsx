@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import * as activityService from "../../services/activitiesService";
-import * as favoriteService from "../../services/favoriteService";
 import styles from "./ActivityDetails.module.css";
 import Loading from "../Loading/Loading";
 
@@ -12,8 +11,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   const [activity, setActivity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [loadingFavorite, setLoadingFavorite] = useState(true);
   const [isUpcoming, setIsUpcoming] = useState(true);
 
   // Format functions
@@ -64,74 +61,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
     }
   };
 
-  const handleToggleStatus = async () => {
-    const action = activity.is_active ? "deactivate" : "activate";
-
-    if (!window.confirm(`Are you sure you want to ${action} this activity?`)) {
-      return;
-    }
-
-    try {
-      const updatedActivity = await activityService.toggleStatus(activityId);
-      setActivity(updatedActivity);
-      alert(`Activity successfully ${action}d!`);
-    } catch (err) {
-      setError(`Failed to ${action} activity: ${err.message}`);
-      console.error("Toggle status error:", err);
-    }
-  };
-
-  // Check if activity is favorited
-  const checkFavoriteStatus = async () => {
-    if (!user) {
-      setIsFavorited(false);
-      setLoadingFavorite(false);
-      return;
-    }
-
-    try {
-      setLoadingFavorite(true);
-      const response = await favoriteService.checkFavorite(
-        activityId,
-        "activity"
-      );
-      setIsFavorited(response.is_favorited);
-    } catch (error) {
-      console.error("Error checking favorite status:", error);
-      setIsFavorited(false);
-    } finally {
-      setLoadingFavorite(false);
-    }
-  };
-
-  // Broadcast favorite update to other components
-  const broadcastFavoriteUpdate = () => {
-    localStorage.setItem("favorites_updated", Date.now().toString());
-    window.dispatchEvent(new Event("favoriteUpdated"));
-  };
-
-  // Toggle favorite status
-  const handleFavoriteToggle = async () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
-    try {
-      if (isFavorited) {
-        await favoriteService.removeFavorite(activityId, "activity");
-        setIsFavorited(false);
-      } else {
-        await favoriteService.addFavorite(activityId, "activity");
-        setIsFavorited(true);
-      }
-
-      broadcastFavoriteUpdate();
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-    }
-  };
-
   useEffect(() => {
     const fetchActivity = async () => {
       try {
@@ -151,21 +80,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
     };
 
     fetchActivity();
-    checkFavoriteStatus();
-  }, [activityId, user]);
-
-  // Listen for favorite updates from other components
-  useEffect(() => {
-    const handleFavoriteUpdate = () => {
-      checkFavoriteStatus();
-    };
-
-    window.addEventListener("favoriteUpdated", handleFavoriteUpdate);
-
-    return () => {
-      window.removeEventListener("favoriteUpdated", handleFavoriteUpdate);
-    };
-  }, [activityId, user]);
+  }, [activityId]);
 
   if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
@@ -173,24 +88,9 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
 
   const isAdmin = user?.role === "admin";
   const canEditDelete = isAdmin;
-  const canViewInactive = isAdmin || activity.is_active;
+
   const dateTime = formatDateTime(activity.date_time);
   const isSoldOut = activity.current_capacity >= activity.max_capacity;
-
-  // If activity is inactive and user cannot view it, show not found
-  if (!activity.is_active && !canViewInactive) {
-    return (
-      <main className={styles.container}>
-        <div className={styles.error}>
-          <h2>Activity Not Available</h2>
-          <p>This activity is currently inactive and cannot be viewed.</p>
-          <Link to="/activities" className={styles.backLink}>
-            ← Back to Activities
-          </Link>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className={styles.container}>
@@ -212,22 +112,6 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   <p>No Image Available</p>
                 </div>
               )}
-
-              {/* Favorite Button */}
-              {user && (
-                <button
-                  className={`${styles.favoriteButton} ${
-                    isFavorited ? styles.favorited : ""
-                  }`}
-                  onClick={handleFavoriteToggle}
-                  aria-label={
-                    isFavorited ? "Remove from favorites" : "Add to favorites"
-                  }
-                  disabled={loadingFavorite}
-                >
-                  {isFavorited ? "❤️" : "🤍"}
-                </button>
-              )}
             </div>
 
             <h1>{activity.title}</h1>
@@ -241,16 +125,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   >
                     Edit
                   </Link>
-                  <button
-                    onClick={handleToggleStatus}
-                    className={`${styles.toggleButton} ${
-                      activity.is_active
-                        ? styles.deactivateBtn
-                        : styles.activateBtn
-                    }`}
-                  >
-                    {activity.is_active ? "Deactivate" : "Activate"}
-                  </button>
+
                   <button
                     onClick={handleDelete}
                     className={styles.deleteButton}
@@ -345,23 +220,11 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </div>
                 </div>
               )}
-
-              {isAdmin && !activity.is_active && (
-                <div className={styles.infoItem}>
-                  <div className={styles.infoIcon}>⚠️</div>
-                  <div>
-                    <strong>Admin Note:</strong>
-                    <span className={styles.adminNote}>
-                      Activity is inactive and hidden from public view
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           </section>
 
           {/* Booking Section (for upcoming events) */}
-          {isUpcoming && activity.is_active && !isSoldOut && (
+          {isUpcoming && !isSoldOut && (
             <section className={styles.bookingSection}>
               <h3>Join This Activity</h3>
               <div className={styles.bookingInfo}>

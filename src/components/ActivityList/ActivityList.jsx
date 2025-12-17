@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styles from "./ActivityList.module.css";
 import * as activityService from "../../services/activitiesService";
-
+import * as bookingService from "../../services/bookingService";
 const ActivityList = ({
   user,
   activities: initialActivities = [],
@@ -12,7 +12,7 @@ const ActivityList = ({
   const [statusFilter, setStatusFilter] = useState("upcoming");
   const [loading, setLoading] = useState(!initialActivities.length);
   const [activities, setLocalActivities] = useState(initialActivities);
-
+  const [userBookings, setUserBookings] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
@@ -29,6 +29,57 @@ const ActivityList = ({
     });
     return ["all", ...Array.from(uniqueCategories).sort()];
   }, [activities]);
+
+  useEffect(() => {
+    const fetchUserBookings = async () => {
+      if (user && user.role !== "admin") {
+        try {
+          const bookings = await bookingService.getAllForUser();
+          setUserBookings(bookings);
+        } catch (error) {
+          console.error("Error fetching user bookings:", error);
+        }
+      }
+    };
+
+    fetchUserBookings();
+  }, [user]);
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (user?.role === "admin") {
+        try {
+          setLoading(true);
+          const allActivities = await activityService.getAllActivitiesAdmin();
+          setLocalActivities(allActivities);
+          if (setActivities) setActivities(allActivities);
+        } catch (error) {
+          console.error("Error fetching admin activities:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (!initialActivities.length) {
+        try {
+          setLoading(true);
+          const publicActivities = await activityService.index(true);
+          setLocalActivities(publicActivities);
+          if (setActivities) setActivities(publicActivities);
+        } catch (error) {
+          console.error("Error fetching public activities:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchActivities();
+  }, [user, initialActivities.length, setActivities]);
+
+  // Check if user has booked a specific activity
+  const hasUserBookedActivity = (activityId) => {
+    if (!user || user.role === "admin") return false;
+    return userBookings.some((booking) => booking.activity_id === activityId);
+  };
 
   // Format price with 2 decimal places
   const formatPrice = (price) => {
@@ -66,35 +117,29 @@ const ActivityList = ({
   };
 
   useEffect(() => {
-    const fetchActivities = async () => {
-      if (user?.role === "admin") {
-        try {
-          setLoading(true);
-          const allActivities = await activityService.getAllActivitiesAdmin();
-          setLocalActivities(allActivities);
-          if (setActivities) setActivities(allActivities);
-        } catch (error) {
-          console.error("Error fetching admin activities:", error);
-        } finally {
-          setLoading(false);
+    const handleBookingCreated = () => {
+      // Refetch user bookings when a booking is created
+      const fetchUserBookings = async () => {
+        if (user && user.role !== "admin") {
+          try {
+            const bookings = await bookingService.getAllForUser();
+            setUserBookings(bookings);
+          } catch (error) {
+            console.error("Error fetching user bookings:", error);
+          }
         }
-      } else if (!initialActivities.length) {
-        try {
-          setLoading(true);
-          const publicActivities = await activityService.index(true);
-          setLocalActivities(publicActivities);
-          if (setActivities) setActivities(publicActivities);
-        } catch (error) {
-          console.error("Error fetching public activities:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
+      };
+
+      fetchUserBookings();
     };
 
-    fetchActivities();
-  }, [user, initialActivities.length, setActivities]);
+    // Listen for bookingCreated events
+    window.addEventListener("bookingCreated", handleBookingCreated);
 
+    return () => {
+      window.removeEventListener("bookingCreated", handleBookingCreated);
+    };
+  }, [user, activities]);
   const handleDelete = async (activityId, e) => {
     e.preventDefault(); // Prevent link navigation
     e.stopPropagation(); // Prevent card click
@@ -120,37 +165,6 @@ const ActivityList = ({
     }
   };
 
-  const handleToggleStatus = async (activityId, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const activity = activities.find((a) => a.id === activityId);
-    const action = activity.is_active ? "deactivate" : "activate";
-
-    if (!window.confirm(`Are you sure you want to ${action} this activity?`)) {
-      return;
-    }
-
-    try {
-      const updatedActivity = await activityService.toggleStatus(activityId);
-
-      // Update the activity in state
-      setLocalActivities((prev) =>
-        prev.map((a) => (a.id === activityId ? updatedActivity : a))
-      );
-
-      if (setActivities) {
-        setActivities((prev) =>
-          prev.map((a) => (a.id === activityId ? updatedActivity : a))
-        );
-      }
-    } catch (error) {
-      console.error("Error toggling activity status:", error);
-      const errorMessage = error.message || "Unknown error occurred";
-      alert(`Failed to ${action} activity: ${errorMessage}`);
-    }
-  };
-
   const filteredActivities = useMemo(() => {
     let filtered = [...activities];
 
@@ -159,16 +173,6 @@ const ActivityList = ({
       filtered = filtered.filter((a) => new Date(a.date_time) > new Date());
     } else if (statusFilter === "past") {
       filtered = filtered.filter((a) => new Date(a.date_time) <= new Date());
-    }
-
-    // Apply user role filters
-    if (user?.role !== "admin") {
-      filtered = filtered.filter((a) => a.is_active);
-    } else {
-      if (statusFilter === "active")
-        filtered = filtered.filter((a) => a.is_active);
-      if (statusFilter === "inactive")
-        filtered = filtered.filter((a) => !a.is_active);
     }
 
     // Apply search filter
@@ -234,8 +238,7 @@ const ActivityList = ({
   const pastCount = activities.filter(
     (a) => new Date(a.date_time) <= new Date()
   ).length;
-  const activeCount = activities.filter((a) => a.is_active).length;
-  const inactiveCount = activities.filter((a) => !a.is_active).length;
+
   const totalCount = activities.length;
 
   const handlePageChange = (page) => {
@@ -304,14 +307,7 @@ const ActivityList = ({
         <div className={styles.stats}>
           <span className={styles.statUpcoming}>{upcomingCount} Upcoming</span>
           <span className={styles.statPast}>{pastCount} Past</span>
-          {user?.role === "admin" && (
-            <>
-              <span className={styles.statActive}>{activeCount} Active</span>
-              <span className={styles.statInactive}>
-                {inactiveCount} Inactive
-              </span>
-            </>
-          )}
+
           <span className={styles.statTotal}>{totalCount} Total</span>
           {searchQuery && (
             <span className={styles.searchResults}>
@@ -444,172 +440,164 @@ const ActivityList = ({
           </div>
 
           <div className={styles.grid}>
-            {currentActivities.map((activity) => (
-              <div key={activity.id} className={styles.activityCardWrapper}>
-                <div className={styles.activityCard}>
-                  <Link
-                    to={`/activities/${activity.id}`}
-                    className={styles.cardLink}
-                  >
-                    <article>
-                      <div className={styles.imageContainer}>
-                        {activity.image_url ? (
-                          <img
-                            src={activity.image_url}
-                            alt={activity.title}
-                            className={styles.activityImage}
-                          />
-                        ) : (
-                          <div className={styles.noImage}>
-                            <span>🌾</span>
-                            <p>No Image</p>
-                          </div>
-                        )}
+            {currentActivities.map((activity) => {
+              const isUpcoming = new Date(activity.date_time) > new Date();
+              const isSoldOut =
+                activity.current_capacity >= activity.max_capacity;
+              const hasBooked = hasUserBookedActivity(activity.id);
 
-                        {/* Status badges */}
-                        {new Date(activity.date_time) > new Date() ? (
-                          <div className={styles.upcomingBadge}>UPCOMING</div>
-                        ) : (
-                          <div className={styles.pastBadge}>PAST</div>
-                        )}
-
-                        {!activity.is_active && (
-                          <div className={styles.inactiveBadge}>INACTIVE</div>
-                        )}
-
-                        {/* Capacity indicator */}
-                        {activity.current_capacity >= activity.max_capacity && (
-                          <div className={styles.soldOutBadge}>SOLD OUT</div>
-                        )}
-                      </div>
-
-                      <div className={styles.activityContent}>
-                        <header>
-                          <div className={styles.activityHeader}>
-                            <h2>{activity.title}</h2>
-                            <div className={styles.priceTag}>
-                              {formatPrice(activity.price)}
-                              <span>/person</span>
+              return (
+                <div key={activity.id} className={styles.activityCardWrapper}>
+                  <div className={styles.activityCard}>
+                    <Link
+                      to={`/activities/${activity.id}`}
+                      className={styles.cardLink}
+                    >
+                      <article>
+                        <div className={styles.imageContainer}>
+                          {activity.image_url ? (
+                            <img
+                              src={activity.image_url}
+                              alt={activity.title}
+                              className={styles.activityImage}
+                            />
+                          ) : (
+                            <div className={styles.noImage}>
+                              <span>🌾</span>
+                              <p>No Image</p>
                             </div>
-                          </div>
-                        </header>
+                          )}
 
-                        <div className={styles.datetimeInfo}>
-                          <span className={styles.iconText}>📅</span>
-                          <span className={styles.date}>
-                            {formatDate(activity.date_time)}
-                          </span>
-                          <span className={styles.time}>
-                            {formatTime(activity.date_time)}
-                          </span>
+                          {/* Status badges */}
+                          {isUpcoming ? (
+                            <div className={styles.upcomingBadge}>UPCOMING</div>
+                          ) : (
+                            <div className={styles.pastBadge}>PAST</div>
+                          )}
+
+                          {/* Booked badge */}
+                          {hasBooked && isUpcoming && (
+                            <div className={styles.bookedBadge}>BOOKED</div>
+                          )}
+
+                          {/* Capacity indicator */}
+                          {isSoldOut && (
+                            <div className={styles.soldOutBadge}>SOLD OUT</div>
+                          )}
                         </div>
 
-                        <p className={styles.description}>
-                          {activity.description}
-                        </p>
+                        <div className={styles.activityContent}>
+                          <header>
+                            <div className={styles.activityHeader}>
+                              <h2>{activity.title}</h2>
+                              <div className={styles.priceTag}>
+                                {formatPrice(activity.price)}
+                                <span>/person</span>
+                              </div>
+                            </div>
+                          </header>
 
-                        <div className={styles.activityDetails}>
-                          <div className={styles.detailItem}>
-                            <span className={styles.iconText}>⏰</span>
-                            <span>
-                              {formatDuration(activity.duration_minutes)}
+                          <div className={styles.datetimeInfo}>
+                            <span className={styles.iconText}>📅</span>
+                            <span className={styles.date}>
+                              {formatDate(activity.date_time)}
+                            </span>
+                            <span className={styles.time}>
+                              {formatTime(activity.date_time)}
                             </span>
                           </div>
 
-                          <div className={styles.detailItem}>
-                            <span className={styles.iconText}>👥</span>
-                            <span>
-                              {activity.current_capacity} of{" "}
-                              {activity.max_capacity} booked
-                            </span>
-                            <span className={styles.spotsLeft}>
-                              (
-                              {activity.max_capacity -
-                                activity.current_capacity}{" "}
-                              spots left)
-                            </span>
-                          </div>
+                          <p className={styles.description}>
+                            {activity.description}
+                          </p>
 
-                          {activity.category && (
+                          <div className={styles.activityDetails}>
                             <div className={styles.detailItem}>
-                              <span className={styles.iconText}>🏷️</span>
-                              <span className={styles.category}>
-                                {activity.category}
+                              <span className={styles.iconText}>⏰</span>
+                              <span>
+                                {formatDuration(activity.duration_minutes)}
                               </span>
                             </div>
-                          )}
+
+                            <div className={styles.detailItem}>
+                              <span className={styles.iconText}>👥</span>
+                              <span>
+                                {activity.current_capacity} of{" "}
+                                {activity.max_capacity} booked
+                              </span>
+                              <span className={styles.spotsLeft}>
+                                (
+                                {activity.max_capacity -
+                                  activity.current_capacity}{" "}
+                                spots left)
+                              </span>
+                            </div>
+
+                            {activity.category && (
+                              <div className={styles.detailItem}>
+                                <span className={styles.iconText}>🏷️</span>
+                                <span className={styles.category}>
+                                  {activity.category}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className={styles.activityFooter}>
+                            {activity.location && (
+                              <span className={styles.location}>
+                                <span className={styles.iconText}>📍</span>
+                                {activity.location}
+                              </span>
+                            )}
+                          </div>
                         </div>
+                      </article>
+                    </Link>
 
-                        <div className={styles.activityFooter}>
-                          <span
-                            className={`${styles.status} ${
-                              activity.is_active
-                                ? styles.active
-                                : styles.inactive
-                            }`}
-                          >
-                            {activity.is_active ? "✓ Active" : "✗ Inactive"}
-                          </span>
-                          {activity.location && (
-                            <span className={styles.location}>
-                              <span className={styles.iconText}>📍</span>
-                              {activity.location}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  </Link>
-
-                  {/* Admin actions inside the card */}
-                  {user?.role === "admin" && (
-                    <div className={styles.adminActions}>
-                      <Link
-                        to={`/activities/${activity.id}/edit`}
-                        className={styles.editBtn}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Edit
-                      </Link>
-
-                      <button
-                        onClick={(e) => handleToggleStatus(activity.id, e)}
-                        className={`${styles.statusBtn} ${
-                          activity.is_active
-                            ? styles.deactivateBtn
-                            : styles.activateBtn
-                        }`}
-                      >
-                        {activity.is_active ? "Deactivate" : "Activate"}
-                      </button>
-
-                      <button
-                        onClick={(e) => handleDelete(activity.id, e)}
-                        className={styles.deleteBtn}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Book button for customers - Add this after admin actions */}
-                  {user?.role !== "admin" &&
-                    new Date(activity.date_time) > new Date() &&
-                    activity.is_active &&
-                    activity.current_capacity < activity.max_capacity && (
-                      <div className={styles.bookingAction}>
+                    {/* Admin actions inside the card */}
+                    {user?.role === "admin" && (
+                      <div className={styles.adminActions}>
                         <Link
-                          to={`/activities/${activity.id}/book`}
-                          className={styles.bookButton}
+                          to={`/activities/${activity.id}/edit`}
+                          className={styles.editBtn}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Book Now
+                          Edit
                         </Link>
+
+                        <button
+                          onClick={(e) => handleDelete(activity.id, e)}
+                          className={styles.deleteBtn}
+                        >
+                          Delete
+                        </button>
                       </div>
                     )}
+
+                    {/* Book button for customers */}
+                    {user?.role !== "admin" && isUpcoming && !isSoldOut && (
+                      <div className={styles.bookingAction}>
+                        {hasBooked ? (
+                          <div className={styles.bookedButton}>
+                            <span className={styles.bookedIcon}>✓</span>
+                            Booked
+                          </div>
+                        ) : (
+                          <Link
+                            to={`/activities/${activity.id}/book`}
+                            className={styles.bookButton}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Book Now
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {totalPages > 1 && (

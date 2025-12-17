@@ -127,6 +127,58 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
 }
+/* Add to ActivityList.module.css */
+.bookedButton {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+
+.bookedButton:hover {
+  opacity: 1;
+  transform: none; /* Remove hover effect since it's disabled */
+}
+
+.bookedIcon {
+  font-size: 18px;
+}
+
+.bookButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bookButton:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.bookingAction {
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+  margin-top: auto;
+}
 .searchInput {
   width: 100%;
   padding: 0.875rem 1rem;

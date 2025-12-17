@@ -72,14 +72,9 @@ const BookingForm = ({ user }) => {
       // Basic validation
       const spotsLeft = activity.max_capacity - activity.current_capacity;
       const isUpcoming = new Date(activity.date_time) > new Date();
-      const isActive = activity.is_active;
 
       if (!isUpcoming) {
         throw new Error("Cannot book past activities.");
-      }
-
-      if (!isActive) {
-        throw new Error("This activity is currently inactive.");
       }
 
       if (bookingData.tickets_number > spotsLeft) {
@@ -104,7 +99,7 @@ const BookingForm = ({ user }) => {
       );
 
       console.log("Booking created successfully:", createdBooking);
-
+      window.dispatchEvent(new Event("bookingCreated"));
       // Navigate to the booking details page
       navigate(`/bookings/${createdBooking.id}`);
     } catch (err) {
@@ -172,14 +167,13 @@ const BookingForm = ({ user }) => {
   }
 
   const isUpcoming = new Date(activity.date_time) > new Date();
-  const isActive = activity.is_active;
+
   const spotsLeft = activity.max_capacity - activity.current_capacity;
   const isSoldOut = spotsLeft <= 0;
-  const maxTickets = Math.min(spotsLeft, 50); // Max 50 tickets per booking
+  const maxTickets = Math.min(spotsLeft, 50);
 
   // Check if booking is possible
-  const canBook =
-    isUpcoming && isActive && !isSoldOut && user?.role !== "admin";
+  const canBook = isUpcoming && !isSoldOut && user?.role !== "admin";
 
   return (
     <main className={styles.container}>
@@ -223,7 +217,7 @@ const BookingForm = ({ user }) => {
             <div className={styles.cannotBookIcon}>🚫</div>
             <h3>Booking Not Available</h3>
             {!isUpcoming && <p>This activity has already taken place.</p>}
-            {!isActive && <p>This activity is currently inactive.</p>}
+
             {isSoldOut && <p>This activity is sold out.</p>}
             {user?.role === "admin" && <p>Admins cannot book activities.</p>}
             {!user && <p>Please log in to book activities.</p>}
