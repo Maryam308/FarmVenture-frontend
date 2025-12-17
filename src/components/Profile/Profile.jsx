@@ -1,32 +1,37 @@
 // src/components/Profile/Profile.jsx
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import * as productService from '../../services/productService';
-import * as favoriteService from '../../services/favoriteService';
-import styles from './Profile.module.css';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import * as productService from "../../services/productService";
+import * as favoriteService from "../../services/favoriteService";
+import * as bookingService from "../../services/bookingService";
+import styles from "./Profile.module.css";
 
 const Profile = ({ user }) => {
   // Main tab state
-  const [activeTab, setActiveTab] = useState(user?.role === 'admin' ? 'products' : 'favorites');
-  
+  const [activeTab, setActiveTab] = useState(
+    user?.role === "admin" ? "bookings" : "favorites"
+  );
+
   // Sub-filter states
-  const [favoriteFilter, setFavoriteFilter] = useState('all'); // 'all', 'products', 'activities'
-  const [adminFilter, setAdminFilter] = useState('products'); // 'products', 'activities'
-  
+  const [favoriteFilter, setFavoriteFilter] = useState("all"); // 'all', 'products', 'activities'
+
+  // Data states
   const [userProducts, setUserProducts] = useState([]);
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [favoriteActivities, setFavoriteActivities] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingBookings, setLoadingBookings] = useState(false);
   const [error, setError] = useState(null);
-  
-  // State for admin product status filter
-  const [statusFilter, setStatusFilter] = useState('active');
+
+  // Filter states
+  const [bookingStatusFilter, setBookingStatusFilter] = useState("all");
 
   // MAIN DATA FETCH - runs once on mount and when user changes
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-        console.log('Profile: No user found');
+        console.log("Profile: No user found");
         setLoading(false);
         return;
       }
@@ -34,53 +39,54 @@ const Profile = ({ user }) => {
       try {
         setLoading(true);
         setError(null);
-        
-        console.log('Profile: User object:', user);
-        
-        if (user.role === 'admin') {
-          // Admin: fetch products
-          console.log('Profile: Fetching all products for admin');
-          const allProducts = await productService.getAllProductsAdmin(true);
-          console.log("Profile: Admin products fetched:", allProducts.length);
-          setUserProducts(allProducts);
-        } else if (user.role === 'customer') {
+
+        console.log("Profile: User object:", user);
+
+        if (user.role === "admin") {
+          // Admin: fetch bookings only
+          console.log("Profile: Fetching bookings for admin");
+          await fetchBookings();
+        } else if (user.role === "customer") {
           // Customer: fetch favorites
-          console.log('Profile: Fetching favorites for customer');
-          
+          console.log("Profile: Fetching favorites for customer");
+
           const allFavorites = await favoriteService.getFavorites();
-          console.log('Profile: Received favorites data:', allFavorites);
-          
+          console.log("Profile: Received favorites data:", allFavorites);
+
           const products = [];
           const activities = [];
-          
+
           allFavorites.forEach((fav, index) => {
             console.log(`Processing favorite ${index}:`, fav);
-            
-            if (fav.item_type === 'product' && fav.item) {
-              console.log('Found product favorite with item data:', fav.item);
+
+            if (fav.item_type === "product" && fav.item) {
+              console.log("Found product favorite with item data:", fav.item);
               products.push({
                 ...fav.item,
                 favorite_id: fav.id,
-                favorited_at: fav.created_at
+                favorited_at: fav.created_at,
               });
-            } else if (fav.item_type === 'activity' && fav.item) {
-              console.log('Found activity favorite with item data:', fav.item);
+            } else if (fav.item_type === "activity" && fav.item) {
+              console.log("Found activity favorite with item data:", fav.item);
               activities.push({
                 ...fav.item,
                 favorite_id: fav.id,
-                favorited_at: fav.created_at
+                favorited_at: fav.created_at,
               });
             }
           });
-          
-          console.log('Profile: Products found:', products.length);
-          console.log('Profile: Activities found:', activities.length);
+
+          console.log("Profile: Products found:", products.length);
+          console.log("Profile: Activities found:", activities.length);
           setFavoriteProducts(products);
           setFavoriteActivities(activities);
+
+          // Fetch bookings for customer
+          await fetchBookings();
         }
       } catch (error) {
-        console.error('Error fetching profile data:', error);
-        setError(error.message || 'Failed to load profile data');
+        console.error("Error fetching profile data:", error);
+        setError(error.message || "Failed to load profile data");
       } finally {
         console.log("Profile: Setting loading to false");
         setLoading(false);
@@ -90,40 +96,70 @@ const Profile = ({ user }) => {
     fetchData();
   }, [user?.sub, user?.role]);
 
+  // Fetch bookings function
+  const fetchBookings = async () => {
+    if (!user) return;
+
+    try {
+      setLoadingBookings(true);
+      console.log("Fetching bookings for user:", user);
+
+      let bookingsData = [];
+
+      if (user.role === "admin") {
+        // Admin: fetch all bookings
+        bookingsData = await bookingService.getAllBookingsAdmin();
+      } else {
+        // Customer: fetch only their bookings
+        bookingsData = await bookingService.getMyBookings();
+      }
+
+      console.log("Bookings fetched:", bookingsData);
+      setBookings(bookingsData || []);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  };
+
   // Listen for favorite updates - only for customers
   useEffect(() => {
-    if (!user || user.role !== 'customer') return;
+    if (!user || user.role !== "customer") return;
 
     const handleFavoriteUpdate = async () => {
-      console.log('Profile: Favorite update event received, refreshing favorites');
-      
+      console.log(
+        "Profile: Favorite update event received, refreshing favorites"
+      );
+
       try {
         const allFavorites = await favoriteService.getFavorites();
-        console.log('Profile: Refreshed favorites:', allFavorites);
-        
+        console.log("Profile: Refreshed favorites:", allFavorites);
+
         const products = [];
         const activities = [];
-        
+
         allFavorites.forEach((fav) => {
-          if (fav.item_type === 'product' && fav.item) {
+          if (fav.item_type === "product" && fav.item) {
             products.push({
               ...fav.item,
               favorite_id: fav.id,
-              favorited_at: fav.created_at
+              favorited_at: fav.created_at,
             });
-          } else if (fav.item_type === 'activity' && fav.item) {
+          } else if (fav.item_type === "activity" && fav.item) {
             activities.push({
               ...fav.item,
               favorite_id: fav.id,
-              favorited_at: fav.created_at
+              favorited_at: fav.created_at,
             });
           }
         });
-        
+
         setFavoriteProducts(products);
         setFavoriteActivities(activities);
       } catch (error) {
-        console.error('Error refreshing favorites:', error);
+        console.error("Error refreshing favorites:", error);
       }
     };
 
@@ -136,46 +172,68 @@ const Profile = ({ user }) => {
     };
   }, [user?.sub, user?.role]);
 
+  // Listen for booking updates
+  useEffect(() => {
+    if (!user) return;
+
+    const handleBookingUpdate = () => {
+      fetchBookings();
+    };
+
+    window.addEventListener("bookingCreated", handleBookingUpdate);
+    window.addEventListener("bookingCancelled", handleBookingUpdate);
+
+    return () => {
+      window.removeEventListener("bookingCreated", handleBookingUpdate);
+      window.removeEventListener("bookingCancelled", handleBookingUpdate);
+    };
+  }, [user]);
+
   // Filter bookings based on status
-  const filteredBookings = bookings.filter((booking) => {
+  const filteredBookings = (bookings || []).filter((booking) => {
     if (bookingStatusFilter === "all") return true;
     return booking.status === bookingStatusFilter;
   });
 
-  // Filter products based on selected filter (admin only)
-  const filteredProducts = userProducts.filter(product => {
-    if (statusFilter === 'active') return product.is_active;
-    if (statusFilter === 'inactive') return !product.is_active;
-    return true;
-  });
-
-  const activeCount = userProducts.filter(p => p.is_active).length;
-  const inactiveCount = userProducts.filter(p => !p.is_active).length;
-  const totalCount = userProducts.length;
-
   // Get favorites based on filter
   const getFilteredFavorites = () => {
-    if (favoriteFilter === 'products') return favoriteProducts;
-    if (favoriteFilter === 'activities') return favoriteActivities;
+    if (favoriteFilter === "products") return favoriteProducts;
+    if (favoriteFilter === "activities") return favoriteActivities;
     // 'all' - combine both
     return [...favoriteProducts, ...favoriteActivities];
   };
 
   // Handle favorite toggle for Profile
   const handleFavoriteToggle = async (itemId, itemType, isFavorited) => {
-    if (!user || user.role !== 'customer') return;
-    
+    if (!user || user.role !== "customer") return;
+
     try {
       if (isFavorited) {
         await favoriteService.removeFavorite(itemId, itemType);
       } else {
         await favoriteService.addFavorite(itemId, itemType);
       }
-      
-      localStorage.setItem('favorites_updated', Date.now().toString());
-      window.dispatchEvent(new Event('favoriteUpdated'));
+
+      localStorage.setItem("favorites_updated", Date.now().toString());
+      window.dispatchEvent(new Event("favoriteUpdated"));
     } catch (error) {
       console.error("Error toggling favorite from profile:", error);
+    }
+  };
+
+  // Handle cancel booking
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Are you sure you want to cancel this booking?")) {
+      return;
+    }
+
+    try {
+      await bookingService.cancelBooking(bookingId);
+      alert("Booking cancelled successfully!");
+      fetchBookings(); // Refresh bookings
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      alert(error.message || "Failed to cancel booking");
     }
   };
 
@@ -246,34 +304,18 @@ const Profile = ({ user }) => {
       <section className={styles.tabsSection}>
         {/* Main Tabs */}
         <div className={styles.tabNav}>
-          {user?.role === 'admin' ? (
-            <>
-              <button
-                className={`${styles.tabButton} ${
-                  activeTab === "products" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveTab("products")}
-              >
-                Product Management
-              </button>
-              <button
-                className={`${styles.tabButton} ${
-                  activeTab === "bookings" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveTab("bookings")}
-              >
-                Bookings Management
-              </button>
-              <button
-                className={`${styles.tabButton} ${
-                  activeTab === "activities" ? styles.activeTab : ""
-                }`}
-                onClick={() => setActiveTab("activities")}
-              >
-                Activity Management
-              </button>
-            </>
+          {user?.role === "admin" ? (
+            // Admin: Only Bookings Management tab
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "bookings" ? styles.activeTab : ""
+              }`}
+              onClick={() => setActiveTab("bookings")}
+            >
+              Bookings Management
+            </button>
           ) : (
+            // Customer: Favorites and Booked Activities tabs
             <>
               <button
                 className={`${styles.tabButton} ${
@@ -284,8 +326,10 @@ const Profile = ({ user }) => {
                 Favorites
               </button>
               <button
-                className={`${styles.tabButton} ${activeTab === 'bookings' ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab('bookings')}
+                className={`${styles.tabButton} ${
+                  activeTab === "bookings" ? styles.activeTab : ""
+                }`}
+                onClick={() => setActiveTab("bookings")}
               >
                 Booked Activities
               </button>
@@ -293,154 +337,194 @@ const Profile = ({ user }) => {
           )}
         </div>
 
-        {/* ADMIN VIEW */}
-        {user?.role === 'admin' && (
-          <>
-            {/* Product Management Tab */}
-            {activeTab === 'products' && (
-              <div className={styles.productsSection}>
-                <div className={styles.sectionHeader}>
-                  <h2>All Products Management</h2>
-                  <div className={styles.productStats}>
-                    <span className={styles.statActive}>
-                      {activeCount} Active
-                    </span>
-                    <span className={styles.statInactive}>
-                      {inactiveCount} Inactive
-                    </span>
-                    <span className={styles.statTotal}>{totalCount} Total</span>
-                  </div>
-                </div>
-                
-                <div className={styles.filterControls}>
-                  <div className={styles.filterGroup}>
-                    <label
-                      htmlFor="statusFilter"
-                      className={styles.filterLabel}
-                    >
-                      Filter by Status:
-                    </label>
-                    <select
-                      id="statusFilter"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className={styles.filterSelect}
-                    >
-                      <option value="active">Active Only</option>
-                      <option value="inactive">Inactive Only</option>
-                      <option value="all">All Products</option>
-                    </select>
-                  </div>
-                  <div className={styles.adminNote}>
-                    <p>
-                      💼 As an admin, you can manage all products on the
-                      platform.
-                    </p>
-                  </div>
-                </div>
+        {/* ADMIN VIEW - Only Bookings */}
+        {user?.role === "admin" && (
+          <div className={styles.bookingsSection}>
+            <div className={styles.sectionHeader}>
+              <h2>All Bookings Management</h2>
+              <div className={styles.bookingsStats}>
+                <span className={styles.statTotal}>
+                  {(bookings || []).length} Total Bookings
+                </span>
+                <span className={styles.statUpcoming}>
+                  {
+                    (bookings || []).filter((b) => b.status === "upcoming")
+                      .length
+                  }{" "}
+                  Upcoming
+                </span>
+                <span className={styles.statToday}>
+                  {(bookings || []).filter((b) => b.status === "today").length}{" "}
+                  Today
+                </span>
+                <span className={styles.statPast}>
+                  {(bookings || []).filter((b) => b.status === "past").length}{" "}
+                  Past
+                </span>
+              </div>
+            </div>
 
-                {loading ? (
-                  <div className={styles.loadingState}>
-                    <div className={styles.spinner}></div>
-                    <p>Loading products...</p>
-                  </div>
-                ) : filteredProducts.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <div className={styles.emptyIcon}>📦</div>
-                    <p>
-                      {statusFilter === "all"
-                        ? "No products found in the platform."
-                        : statusFilter === "active"
-                        ? "No active products found."
-                        : "No inactive products found."}
-                    </p>
-                    <Link to="/products/new" className={styles.addButton}>
-                      Create First Product
-                    </Link>
-                  </div>
-                ) : (
-                  <div className={styles.productsGrid}>
-                    {filteredProducts.map((product) => (
-                      <Link
-                        key={product.id}
-                        to={`/products/${product.id}`}
-                        className={styles.productCard}
-                      >
-                        <div className={styles.imageContainer}>
-                          {product.image_url ? (
-                            <img
-                              src={product.image_url}
-                              alt={product.name}
-                              className={styles.productImage}
-                            />
-                          ) : (
-                            <div className={styles.noImagePlaceholder}>
-                              <span>🌱</span>
-                              <p>No Image</p>
-                            </div>
-                          )}
-                          {!product.is_active && (
-                            <div className={styles.inactiveBadge}>INACTIVE</div>
-                          )}
-                        </div>
-                        <div className={styles.productInfo}>
-                          <h3>{product.name}</h3>
-                          <p className={styles.price}>
-                            ${product.price.toFixed(2)}
-                          </p>
-                          <p className={styles.category}>{product.category}</p>
-                          <div className={styles.ownerInfo}>
-                            <p className={styles.owner}>
-                              Owner: {product.user?.username || "Unknown"}
-                            </p>
-                          </div>
-                          <span
-                            className={`${styles.status} ${
-                              product.is_active
-                                ? styles.active
-                                : styles.inactive
-                            }`}
-                          >
-                            {product.is_active ? "Active" : "Inactive"}
+            <div className={styles.filterControls}>
+              <div className={styles.filterGroup}>
+                <label
+                  htmlFor="bookingStatusFilter"
+                  className={styles.filterLabel}
+                >
+                  Filter by Status:
+                </label>
+                <select
+                  id="bookingStatusFilter"
+                  value={bookingStatusFilter}
+                  onChange={(e) => setBookingStatusFilter(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="all">All Bookings</option>
+                  <option value="upcoming">Upcoming</option>
+                  <option value="today">Today</option>
+                  <option value="past">Past</option>
+                </select>
+              </div>
+              <div className={styles.adminNote}>
+                <p>
+                  📊 As an admin, you can view and manage all customer bookings.
+                </p>
+              </div>
+            </div>
+
+            {loadingBookings ? (
+              <div className={styles.loadingState}>
+                <div className={styles.spinner}></div>
+                <p>Loading bookings...</p>
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>🎫</div>
+                <p>
+                  {bookingStatusFilter === "all"
+                    ? "No bookings found in the system."
+                    : `No ${bookingStatusFilter} bookings found.`}
+                </p>
+              </div>
+            ) : (
+              <div className={styles.bookingsGrid}>
+                {filteredBookings.map((booking) => (
+                  <div key={booking.id} className={styles.bookingCard}>
+                    <div className={styles.cardHeader}>
+                      <span className={styles.bookingId}>
+                        Booking #{booking.id}
+                      </span>
+                      {formatBookingStatus(booking.status)}
+                      <span className={styles.customerInfo}>
+                        Customer: {booking.user?.username || "Unknown"}
+                      </span>
+                    </div>
+
+                    <div className={styles.cardContent}>
+                      <h3>{booking.activity?.title || "Activity not found"}</h3>
+
+                      <div className={styles.bookingDetails}>
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailLabel}>Date:</span>
+                          <span className={styles.detailValue}>
+                            {booking.activity?.date_time
+                              ? new Date(
+                                  booking.activity.date_time
+                                ).toLocaleDateString()
+                              : "N/A"}
                           </span>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailLabel}>Time:</span>
+                          <span className={styles.detailValue}>
+                            {booking.activity?.date_time
+                              ? new Date(
+                                  booking.activity.date_time
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              : "N/A"}
+                          </span>
+                        </div>
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailLabel}>Tickets:</span>
+                          <span className={styles.detailValue}>
+                            {booking.tickets_number}
+                          </span>
+                        </div>
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailLabel}>
+                            Price per ticket:
+                          </span>
+                          <span className={styles.detailValue}>
+                            BHD{(booking.activity?.price || 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className={styles.detailRow}>
+                          <span className={styles.detailLabel}>Total:</span>
+                          <span className={styles.detailValue}>
+                            <strong>
+                              BHD
+                              {(
+                                (booking.activity?.price || 0) *
+                                booking.tickets_number
+                              ).toFixed(2)}
+                            </strong>
+                          </span>
+                        </div>
+                      </div>
 
-            {/* Activity Management Tab */}
-            {activeTab === 'activities' && (
-              <div className={styles.productsSection}>
-                <div className={styles.sectionHeader}>
-                  <h2>All Activities Management</h2>
-                </div>
-                
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>🎯</div>
-                  <p>Activity management is coming soon!</p>
-                  <p className={styles.helperText}>
-                    You'll be able to manage all activities on the platform here.
-                  </p>
-                </div>
+                      <div className={styles.bookedInfo}>
+                        <span className={styles.bookedAt}>
+                          Booked on:{" "}
+                          {new Date(booking.booked_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.cardFooter}>
+                      {booking.activity && (
+                        <Link
+                          to={`/activities/${booking.activity.id}`}
+                          className={styles.viewButton}
+                        >
+                          View Activity
+                        </Link>
+                      )}
+                      <Link
+                        to={`/bookings/${booking.id}`}
+                        className={styles.detailsButton}
+                      >
+                        Booking Details
+                      </Link>
+                      {booking.status === "upcoming" && (
+                        <button
+                          onClick={() => handleCancelBooking(booking.id)}
+                          className={styles.cancelButton}
+                        >
+                          Cancel as Admin
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* CUSTOMER VIEW */}
-        {user?.role === 'customer' && (
+        {user?.role === "customer" && (
           <>
             {/* Favorites Tab */}
-            {activeTab === 'favorites' && (
+            {activeTab === "favorites" && (
               <div className={styles.favoritesSection}>
                 <div className={styles.sectionHeader}>
                   <h2>My Favorites</h2>
                   <div className={styles.favoritesStats}>
                     <span className={styles.statCount}>
-                      {favoriteProducts.length + favoriteActivities.length} Total
+                      {favoriteProducts.length + favoriteActivities.length}{" "}
+                      Total
                     </span>
                     <span className={styles.statProducts}>
                       {favoriteProducts.length} Products
@@ -454,7 +538,10 @@ const Profile = ({ user }) => {
                 {/* Sub-filter for favorites */}
                 <div className={styles.subFilterControls}>
                   <div className={styles.filterGroup}>
-                    <label htmlFor="favoriteFilter" className={styles.filterLabel}>
+                    <label
+                      htmlFor="favoriteFilter"
+                      className={styles.filterLabel}
+                    >
                       Show:
                     </label>
                     <select
@@ -469,7 +556,7 @@ const Profile = ({ user }) => {
                     </select>
                   </div>
                 </div>
-                
+
                 {loading ? (
                   <div className={styles.loadingState}>
                     <div className={styles.spinner}></div>
@@ -479,14 +566,18 @@ const Profile = ({ user }) => {
                   <div className={styles.emptyState}>
                     <div className={styles.emptyIcon}>❤️</div>
                     <p>
-                      {favoriteFilter === 'all' 
+                      {favoriteFilter === "all"
                         ? "You haven't favorited anything yet."
-                        : favoriteFilter === 'products'
+                        : favoriteFilter === "products"
                         ? "You haven't favorited any products yet."
                         : "You haven't favorited any activities yet."}
                     </p>
                     <p className={styles.helperText}>
-                      Browse {favoriteFilter === 'activities' ? 'activities' : 'products'} and click the heart icon to add them to favorites.
+                      Browse{" "}
+                      {favoriteFilter === "activities"
+                        ? "activities"
+                        : "products"}{" "}
+                      and click the heart icon to add them to favorites.
                     </p>
                     <div className={styles.buttonGroup}>
                       <Link to="/products" className={styles.browseButton}>
@@ -498,52 +589,77 @@ const Profile = ({ user }) => {
                   <div className={styles.favoritesGrid}>
                     {filteredFavorites.map((item) => {
                       const isProduct = item.name !== undefined; // Products have 'name', activities have 'title'
-                      const itemType = isProduct ? 'product' : 'activity';
-                      
+                      const itemType = isProduct ? "product" : "activity";
+
                       return (
-                        <div key={`${itemType}-${item.id}`} className={styles.favoriteCard}>
+                        <div
+                          key={`${itemType}-${item.id}`}
+                          className={styles.favoriteCard}
+                        >
                           <div className={styles.cardHeader}>
                             <span className={styles.typeBadge}>
-                              {isProduct ? 'Product' : 'Activity'}
+                              {isProduct ? "Product" : "Activity"}
                             </span>
                             <button
                               className={styles.favoriteButton}
-                              onClick={() => handleFavoriteToggle(item.id, itemType, true)}
+                              onClick={() =>
+                                handleFavoriteToggle(item.id, itemType, true)
+                              }
                               aria-label="Remove from favorites"
-                            >
-                            </button>
+                            ></button>
                           </div>
                           <div className={styles.cardContent}>
-                            <h3>{isProduct ? (item.name || 'Untitled Product') : (item.title || 'Untitled Activity')}</h3>
+                            <h3>
+                              {isProduct
+                                ? item.name || "Untitled Product"
+                                : item.title || "Untitled Activity"}
+                            </h3>
                             <p className={styles.price}>
-                              ${item.price?.toFixed(2) || '0.00'}
-                              {!isProduct && ' per person'}
+                              ${item.price?.toFixed(2) || "0.00"}
+                              {!isProduct && " per person"}
                             </p>
                             {isProduct ? (
-                              <p className={styles.category}>{item.category || 'Uncategorized'}</p>
+                              <p className={styles.category}>
+                                {item.category || "Uncategorized"}
+                              </p>
                             ) : (
                               <>
                                 <p className={styles.activityDate}>
-                                  📅 {new Date(item.date_time).toLocaleDateString()}
+                                  📅{" "}
+                                  {new Date(
+                                    item.date_time
+                                  ).toLocaleDateString()}
                                 </p>
                                 <p className={styles.activityDuration}>
                                   ⏱️ {item.duration_minutes} minutes
                                 </p>
                               </>
                             )}
-                            <p className={styles.description}>{item.description || 'No description available.'}</p>
+                            <p className={styles.description}>
+                              {item.description || "No description available."}
+                            </p>
                           </div>
                           <div className={styles.cardFooter}>
-                            <span className={styles.owner}>By: {item.user?.username || 'Unknown'}</span>
-                            <span className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}>
-                              {item.is_active ? 'Active' : 'Inactive'}
+                            <span className={styles.owner}>
+                              By: {item.user?.username || "Unknown"}
+                            </span>
+                            <span
+                              className={`${styles.status} ${
+                                item.is_active ? styles.active : styles.inactive
+                              }`}
+                            >
+                              {item.is_active ? "Active" : "Inactive"}
                             </span>
                           </div>
-                          <Link 
-                            to={isProduct ? `/products/${item.id}` : `/activities/${item.id}`}
+                          <Link
+                            to={
+                              isProduct
+                                ? `/products/${item.id}`
+                                : `/activities/${item.id}`
+                            }
                             className={styles.viewButton}
                           >
-                            View {isProduct ? 'Product' : 'Activity'}
+                            View {isProduct ? "Product" : "Activity"}
                           </Link>
                         </div>
                       );
@@ -554,27 +670,186 @@ const Profile = ({ user }) => {
             )}
 
             {/* Booked Activities Tab */}
-            {activeTab === 'bookings' && (
-              <div className={styles.favoritesSection}>
+            {activeTab === "bookings" && (
+              <div className={styles.bookingsSection}>
                 <div className={styles.sectionHeader}>
                   <h2>My Booked Activities</h2>
-                  <div className={styles.favoritesStats}>
-                    <span className={styles.statCount}>0 Bookings</span>
+                  <div className={styles.bookingsStats}>
+                    <span className={styles.statTotal}>
+                      {(bookings || []).length} Total Bookings
+                    </span>
+                    <span className={styles.statUpcoming}>
+                      {
+                        (bookings || []).filter((b) => b.status === "upcoming")
+                          .length
+                      }{" "}
+                      Upcoming
+                    </span>
+                    <span className={styles.statToday}>
+                      {
+                        (bookings || []).filter((b) => b.status === "today")
+                          .length
+                      }{" "}
+                      Today
+                    </span>
+                    <span className={styles.statPast}>
+                      {
+                        (bookings || []).filter((b) => b.status === "past")
+                          .length
+                      }{" "}
+                      Past
+                    </span>
                   </div>
                 </div>
-                
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>📅</div>
-                  <p>You haven't booked any activities yet.</p>
-                  <p className={styles.helperText}>
-                    This feature is coming soon! You'll be able to book and manage your activity reservations here.
-                  </p>
-                  <div className={styles.buttonGroup}>
+
+                <div className={styles.filterControls}>
+                  <div className={styles.filterGroup}>
+                    <label
+                      htmlFor="bookingStatusFilter"
+                      className={styles.filterLabel}
+                    >
+                      Filter by Status:
+                    </label>
+                    <select
+                      id="bookingStatusFilter"
+                      value={bookingStatusFilter}
+                      onChange={(e) => setBookingStatusFilter(e.target.value)}
+                      className={styles.filterSelect}
+                    >
+                      <option value="all">All Bookings</option>
+                      <option value="upcoming">Upcoming</option>
+                      <option value="today">Today</option>
+                      <option value="past">Past</option>
+                    </select>
+                  </div>
+                </div>
+
+                {loadingBookings ? (
+                  <div className={styles.loadingState}>
+                    <div className={styles.spinner}></div>
+                    <p>Loading bookings...</p>
+                  </div>
+                ) : filteredBookings.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyIcon}>🎫</div>
+                    <p>
+                      {bookingStatusFilter === "all"
+                        ? "You haven't booked any activities yet."
+                        : `You don't have any ${bookingStatusFilter} bookings.`}
+                    </p>
+                    <p className={styles.helperText}>
+                      Explore farm activities and book your spot!
+                    </p>
                     <Link to="/activities" className={styles.browseButton}>
                       Browse Activities
                     </Link>
                   </div>
-                </div>
+                ) : (
+                  <div className={styles.bookingsGrid}>
+                    {filteredBookings.map((booking) => (
+                      <div key={booking.id} className={styles.bookingCard}>
+                        <div className={styles.cardHeader}>
+                          <span className={styles.bookingId}>
+                            Booking #{booking.id}
+                          </span>
+                          {formatBookingStatus(booking.status)}
+                        </div>
+
+                        <div className={styles.cardContent}>
+                          <h3>
+                            {booking.activity?.title || "Activity not found"}
+                          </h3>
+
+                          <div className={styles.bookingDetails}>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>Date:</span>
+                              <span className={styles.detailValue}>
+                                {booking.activity?.date_time
+                                  ? new Date(
+                                      booking.activity.date_time
+                                    ).toLocaleDateString()
+                                  : "N/A"}
+                              </span>
+                            </div>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>Time:</span>
+                              <span className={styles.detailValue}>
+                                {booking.activity?.date_time
+                                  ? new Date(
+                                      booking.activity.date_time
+                                    ).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })
+                                  : "N/A"}
+                              </span>
+                            </div>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>
+                                Tickets:
+                              </span>
+                              <span className={styles.detailValue}>
+                                {booking.tickets_number}
+                              </span>
+                            </div>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>
+                                Price per ticket:
+                              </span>
+                              <span className={styles.detailValue}>
+                                BHD{(booking.activity?.price || 0).toFixed(2)}
+                              </span>
+                            </div>
+                            <div className={styles.detailRow}>
+                              <span className={styles.detailLabel}>Total:</span>
+                              <span className={styles.detailValue}>
+                                <strong>
+                                  BHD
+                                  {(
+                                    (booking.activity?.price || 0) *
+                                    booking.tickets_number
+                                  ).toFixed(2)}
+                                </strong>
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className={styles.bookedInfo}>
+                            <span className={styles.bookedAt}>
+                              Booked on:{" "}
+                              {new Date(booking.booked_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className={styles.cardFooter}>
+                          {booking.activity && (
+                            <Link
+                              to={`/activities/${booking.activity.id}`}
+                              className={styles.viewButton}
+                            >
+                              View Activity
+                            </Link>
+                          )}
+                          <Link
+                            to={`/bookings/${booking.id}`}
+                            className={styles.detailsButton}
+                          >
+                            Booking Details
+                          </Link>
+                          {booking.status === "upcoming" && (
+                            <button
+                              onClick={() => handleCancelBooking(booking.id)}
+                              className={styles.cancelButton}
+                            >
+                              Cancel Booking
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </>
