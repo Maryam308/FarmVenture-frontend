@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import AuthorInfo from '../AuthorInfo/AuthorInfo';
 import * as productService from '../../services/productService';
+import * as favoriteService from '../../services/favoriteService';
 import styles from './ProductDetails.module.css';
 import Loading from '../Loading/Loading';
 
@@ -12,8 +13,10 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [loadingFavorite, setLoadingFavorite] = useState(true);
 
- const handleDelete = async () => {
+  const handleDelete = async () => {
     try {
         await handleDeleteProduct(productId);
         navigate('/products');
@@ -23,6 +26,63 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
     }
   };
 
+  // Check if product is favorited
+  const checkFavoriteStatus = async () => {
+    if (!user) {
+      setIsFavorited(false);
+      setLoadingFavorite(false);
+      return;
+    }
+    
+    try {
+      setLoadingFavorite(true);
+      console.log('Checking favorite status for product:', productId);
+      const response = await favoriteService.checkFavorite(productId, 'product');
+      console.log('Favorite check response:', response);
+      setIsFavorited(response.is_favorited);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+      setIsFavorited(false);
+    } finally {
+      setLoadingFavorite(false);
+    }
+  };
+
+  // Broadcast favorite update to other components
+  const broadcastFavoriteUpdate = () => {
+    // Update localStorage to trigger storage event
+    localStorage.setItem('favorites_updated', Date.now().toString());
+    
+    // Dispatch custom event
+    window.dispatchEvent(new Event('favoriteUpdated'));
+    
+    console.log('Broadcasted favorite update');
+  };
+
+  // Toggle favorite status
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    try {
+      if (isFavorited) {
+        console.log('Removing favorite for product:', productId);
+        await favoriteService.removeFavorite(productId, 'product');
+        setIsFavorited(false);
+      } else {
+        console.log('Adding favorite for product:', productId);
+        await favoriteService.addFavorite(productId, 'product');
+        setIsFavorited(true);
+      }
+      
+      // Broadcast the update
+      broadcastFavoriteUpdate();
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -49,7 +109,22 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
     };
     
     fetchProduct();
+    checkFavoriteStatus();
   }, [productId, user]);
+
+  // Listen for favorite updates from other components
+  useEffect(() => {
+    const handleFavoriteUpdate = () => {
+      console.log('ProductDetails received favorite update, refreshing...');
+      checkFavoriteStatus();
+    };
+
+    window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
+
+    return () => {
+      window.removeEventListener('favoriteUpdated', handleFavoriteUpdate);
+    };
+  }, []);
 
   if (loading) return <Loading />;
   if (error) return <div className={styles.error}>{error}</div>;
@@ -96,6 +171,18 @@ const ProductDetails = ({ user, handleDeleteProduct }) => {
             <div className={styles.inactiveOverlay}>
               <span className={styles.inactiveText}>INACTIVE</span>
             </div>
+          )}
+          
+          {/* Favorite Button */}
+          {user && (
+            <button
+              className={`${styles.favoriteButton} ${isFavorited ? styles.favorited : ''}`}
+              onClick={handleFavoriteToggle}
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+              disabled={loadingFavorite}
+            >
+              {isFavorited ? '❤️' : '🤍'}
+            </button>
           )}
         </div>
 

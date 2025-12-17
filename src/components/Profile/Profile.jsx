@@ -1,7 +1,8 @@
 // src/components/Profile/Profile.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import * as productService from '../../services/productService';
+import * as favoriteService from '../../services/favoriteService';
 import styles from './Profile.module.css';
 
 const Profile = ({ user }) => {
@@ -11,6 +12,8 @@ const Profile = ({ user }) => {
   const [favoriteActivities, setFavoriteActivities] = useState([]);
   const [bookedActivities, setBookedActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [error, setError] = useState(null);
   
   // State for admin filter
   const [statusFilter, setStatusFilter] = useState('active'); // 'active', 'inactive', 'all'
@@ -18,53 +21,120 @@ const Profile = ({ user }) => {
   // State for favorites filter (for customers)
   const [favoritesFilter, setFavoritesFilter] = useState('all'); // 'all', 'products', 'activities'
 
+  // Fetch real favorites from API
+  const fetchFavorites = useCallback(async () => {
+    if (!user) {
+      console.log('No user for fetchFavorites');
+      return;
+    }
+    
+    try {
+      setLoadingFavorites(true);
+      console.log('Profile: Fetching favorites for user:', user);
+      
+      // Debug the API response first
+      console.log('Debugging favorites API...');
+      const debugResponse = await favoriteService.debugApiResponse(
+        `${import.meta.env.VITE_BACKEND_URL}/api/favorites`
+      );
+      console.log('Debug response:', debugResponse);
+      
+      // Use getFavorites to get full details
+      const allFavorites = await favoriteService.getFavorites();
+      console.log('Profile: Received favorites data:', allFavorites);
+      console.log('Profile: Number of favorites:', allFavorites.length);
+      
+      // Separate products and activities
+      const products = [];
+      const activities = [];
+      
+      allFavorites.forEach((fav, index) => {
+        console.log(`Processing favorite ${index}:`, fav);
+        
+        if (fav.item_type === 'product') {
+          if (fav.item) {
+            console.log('Found product favorite with item data:', fav.item);
+            products.push({
+              ...fav.item,
+              favorite_id: fav.id,
+              favorited_at: fav.created_at
+            });
+          } else {
+            console.log('Found product favorite but no item data, fav.item_id:', fav.item_id);
+            // Try to fetch the product details separately if needed
+          }
+        } else if (fav.item_type === 'activity') {
+          if (fav.item) {
+            console.log('Found activity favorite with item data:', fav.item);
+            activities.push({
+              ...fav.item,
+              favorite_id: fav.id,
+              favorited_at: fav.created_at
+            });
+          } else {
+            console.log('Found activity favorite but no item data');
+          }
+        }
+      });
+      
+      console.log('Profile: Products found after processing:', products);
+      console.log('Profile: Activities found after processing:', activities);
+      
+      setFavoriteProducts(products);
+      setFavoriteActivities(activities);
+    } catch (error) {
+      console.error('Profile: Error fetching favorites:', error);
+      setFavoriteProducts([]);
+      setFavoriteActivities([]);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Profile: User object:', user);
+        
+        if (!user) {
+          console.log('Profile: No user found');
+          setUserProducts([]);
+          return;
+        }
         
         if (user?.role === 'admin') {
           // Admin can see all products (including inactive)
+          console.log('Profile: Fetching all products for admin');
           const allProducts = await productService.getAllProductsAdmin(true);
+          console.log('Profile: Admin products fetched:', allProducts.length);
           setUserProducts(allProducts);
         } else {
           // Regular users see only their own products including inactive
-          const allUserProducts = await productService.getAllUserProducts(user.id);
+          console.log('Profile: Fetching user products for user:', user);
+          
+          // Get user ID - check different possible locations
+          const userId = user.id || user._id || user.userId;
+          console.log('Profile: Extracted userId:', userId);
+          
+          if (!userId) {
+            console.error('Profile: User ID not found in user object:', user);
+            throw new Error('User ID not found in user object');
+          }
+          
+          const allUserProducts = await productService.getAllUserProducts(userId);
+          console.log('Profile: User products fetched:', allUserProducts.length);
           setUserProducts(allUserProducts);
           
+          // Fetch real favorites
+          console.log('Profile: Starting to fetch favorites...');
+          await fetchFavorites();
+          
           // TODO: Replace with actual API calls when available
-          // Mock data for demonstration
-          setFavoriteProducts([
-            { 
-              id: 1, 
-              name: 'Organic Apples', 
-              price: 4.99, 
-              category: 'fruits',
-              image_url: null,
-              is_active: true,
-              user: { username: 'farmfresh' }
-            },
-            { 
-              id: 2, 
-              name: 'Fresh Carrots', 
-              price: 3.50, 
-              category: 'vegetables',
-              image_url: null,
-              is_active: true,
-              user: { username: 'greenthumb' }
-            }
-          ]);
-          
-          setFavoriteActivities([
-            {
-              id: 1,
-              title: 'Farm Tour & Tasting',
-              date_time: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              price: 25.00,
-              status: 'Upcoming'
-            }
-          ]);
-          
+          // Mock data for demonstration (activities)
+          console.log('Profile: Setting mock booked activities');
           setBookedActivities([
             {
               id: 1,
@@ -86,15 +156,41 @@ const Profile = ({ user }) => {
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
+        setError(error.message || 'Failed to load profile data');
+        setUserProducts([]);
+        setFavoriteProducts([]);
+        setFavoriteActivities([]);
       } finally {
+        console.log('Profile: Setting loading to false');
         setLoading(false);
       }
     };
 
+    console.log('Profile: Component mounted, user:', user);
     if (user) {
+      console.log('Profile: User detected, fetching data');
       fetchData();
+    } else {
+      console.log('Profile: No user, setting loading to false');
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchFavorites]);
+
+  // Listen for favorite updates
+  useEffect(() => {
+    const handleFavoriteUpdate = () => {
+      console.log('Profile: Favorite update event received');
+      fetchFavorites();
+    };
+
+    window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
+    window.addEventListener('storage', handleFavoriteUpdate);
+
+    return () => {
+      window.removeEventListener('favoriteUpdated', handleFavoriteUpdate);
+      window.removeEventListener('storage', handleFavoriteUpdate);
+    };
+  }, [fetchFavorites]);
 
   // Filter products based on selected filter (admin only)
   const filteredProducts = userProducts.filter(product => {
@@ -119,18 +215,78 @@ const Profile = ({ user }) => {
   const inactiveCount = userProducts.filter(p => !p.is_active).length;
   const totalCount = userProducts.length;
 
+  // Add favorite toggle handler for Profile
+  const handleFavoriteToggle = async (itemId, itemType, isFavorited) => {
+    if (!user) return;
+    
+    try {
+      if (isFavorited) {
+        await favoriteService.removeFavorite(itemId, itemType);
+      } else {
+        await favoriteService.addFavorite(itemId, itemType);
+      }
+      
+      // Trigger update
+      localStorage.setItem('favorites_updated', Date.now().toString());
+      window.dispatchEvent(new Event('favoriteUpdated'));
+      
+      // Refresh favorites
+      await fetchFavorites();
+    } catch (error) {
+      console.error('Error toggling favorite from profile:', error);
+    }
+  };
+
+  if (!user) {
+    return (
+      <main className={styles.container}>
+        <div className={styles.errorState}>
+          <h2>Please Sign In</h2>
+          <p>You need to be signed in to view your profile.</p>
+          <Link to="/login" className={styles.browseButton}>
+            Sign In
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  console.log('Profile: Rendering, loading:', loading, 'loadingFavorites:', loadingFavorites);
+  console.log('Profile: favoriteProducts count:', favoriteProducts.length);
+  console.log('Profile: favoriteActivities count:', favoriteActivities.length);
+
   return (
     <main className={styles.container}>
       <section className={styles.profileHeader}>
         <h1>Your Profile</h1>
         <div className={styles.userInfo}>
-          <h2>{user.username}</h2>
+          <h2>{user.username || user.email || 'User'}</h2>
           <p>{user.email}</p>
           <span className={`${styles.role} ${user.role === 'admin' ? styles.admin : styles.customer}`}>
-            {user.role.toUpperCase()}
+            {user.role?.toUpperCase() || 'USER'}
           </span>
         </div>
       </section>
+
+      {/* Debug Info - Remove in production */}
+      <div style={{ background: '#f5f5f5', padding: '10px', margin: '10px 0', borderRadius: '5px' }}>
+        <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
+          Debug: Loading={loading ? 'true' : 'false'}, 
+          Favorites Loading={loadingFavorites ? 'true' : 'false'}, 
+          Products={favoriteProducts.length}, 
+          Activities={favoriteActivities.length}
+        </p>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className={styles.errorMessage}>
+          <p>⚠️ {error}</p>
+          <button onClick={() => window.location.reload()} className={styles.retryButton}>
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Tab Navigation - Different tabs for admin vs customer */}
       <section className={styles.tabsSection}>
@@ -257,7 +413,7 @@ const Profile = ({ user }) => {
                           <p className={styles.price}>${product.price.toFixed(2)}</p>
                           <p className={styles.category}>{product.category}</p>
                           <div className={styles.ownerInfo}>
-                            <p className={styles.owner}>Owner: {product.user.username}</p>
+                            <p className={styles.owner}>Owner: {product.user?.username || 'Unknown'}</p>
                           </div>
                           <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
                             {product.is_active ? 'Active' : 'Inactive'}
@@ -318,7 +474,7 @@ const Profile = ({ user }) => {
                   </div>
                 </div>
                 
-                {loading ? (
+                {loading || loadingFavorites ? (
                   <div className={styles.loadingState}>
                     <div className={styles.spinner}></div>
                     <p>Loading favorites...</p>
@@ -347,47 +503,74 @@ const Profile = ({ user }) => {
                   </div>
                 ) : (
                   <div className={styles.favoritesGrid}>
-                    {filteredFavorites.map(item => (
-                      item.price ? ( // Check if it's a product or activity
+                    {filteredFavorites.map((item, index) => {
+                      // Check if item has price property to determine if it's a product
+                      console.log('Rendering favorite item:', item);
+                      
+                      if (item.price !== undefined && item.category !== undefined) {
                         // Product card
-                        <Link 
-                          key={`product-${item.id}`} 
-                          to={`/products/${item.id}`}
-                          className={styles.favoriteCard}
-                        >
-                          <div className={styles.cardHeader}>
-                            <span className={styles.typeBadge}>🛍️ Product</span>
-                            <span className={styles.favoriteBadge}>❤️</span>
+                        return (
+                          <div key={`product-${item.id}-${index}`} className={styles.favoriteCard}>
+                            <div className={styles.cardHeader}>
+                              <span className={styles.typeBadge}>🛍️ Product</span>
+                              <button
+                                className={styles.favoriteButton}
+                                onClick={() => handleFavoriteToggle(item.id, 'product', true)}
+                                aria-label="Remove from favorites"
+                              >
+                                ❤️
+                              </button>
+                            </div>
+                            <div className={styles.cardContent}>
+                              <h3>{item.name || 'Untitled Product'}</h3>
+                              <p className={styles.price}>${item.price?.toFixed(2) || '0.00'}</p>
+                              <p className={styles.category}>{item.category || 'Uncategorized'}</p>
+                              <p className={styles.description}>{item.description || 'No description available.'}</p>
+                            </div>
+                            <div className={styles.cardFooter}>
+                              <span className={styles.owner}>By: {item.user?.username || 'Unknown'}</span>
+                              <span className={`${styles.status} ${item.is_active ? styles.active : styles.inactive}`}>
+                                {item.is_active ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                            <Link 
+                              to={`/products/${item.id}`} 
+                              className={styles.viewButton}
+                              style={{display: 'block', marginTop: '1rem', textAlign: 'center'}}
+                            >
+                              View Product
+                            </Link>
                           </div>
-                          <div className={styles.cardContent}>
-                            <h3>{item.name}</h3>
-                            <p className={styles.price}>${item.price.toFixed(2)}</p>
-                            <p className={styles.category}>{item.category}</p>
-                          </div>
-                          <div className={styles.cardFooter}>
-                            <span className={styles.owner}>By: {item.user?.username || 'Unknown'}</span>
-                          </div>
-                        </Link>
-                      ) : (
+                        );
+                      } else {
                         // Activity card
-                        <div key={`activity-${item.id}`} className={styles.favoriteCard}>
-                          <div className={styles.cardHeader}>
-                            <span className={styles.typeBadge}>📅 Activity</span>
-                            <span className={styles.favoriteBadge}>❤️</span>
+                        return (
+                          <div key={`activity-${item.id}-${index}`} className={styles.favoriteCard}>
+                            <div className={styles.cardHeader}>
+                              <span className={styles.typeBadge}>📅 Activity</span>
+                              <button
+                                className={styles.favoriteButton}
+                                onClick={() => handleFavoriteToggle(item.id, 'activity', true)}
+                                aria-label="Remove from favorites"
+                              >
+                                ❤️
+                              </button>
+                            </div>
+                            <div className={styles.cardContent}>
+                              <h3>{item.title || item.name || 'Untitled Activity'}</h3>
+                              <p className={styles.activityDate}>
+                                📅 {item.date_time ? new Date(item.date_time).toLocaleDateString() : 'Date not set'}
+                              </p>
+                              <p className={styles.price}>${(item.price || 0).toFixed(2)}</p>
+                              <p className={styles.description}>{item.description || item.details || 'No description available.'}</p>
+                            </div>
+                            <div className={styles.cardFooter}>
+                              <span className={styles.status}>{item.status || 'Available'}</span>
+                            </div>
                           </div>
-                          <div className={styles.cardContent}>
-                            <h3>{item.title}</h3>
-                            <p className={styles.activityDate}>
-                              📅 {new Date(item.date_time).toLocaleDateString()}
-                            </p>
-                            <p className={styles.price}>${item.price.toFixed(2)}</p>
-                          </div>
-                          <div className={styles.cardFooter}>
-                            <span className={styles.status}>{item.status}</span>
-                          </div>
-                        </div>
-                      )
-                    ))}
+                        );
+                      }
+                    })}
                   </div>
                 )}
               </div>

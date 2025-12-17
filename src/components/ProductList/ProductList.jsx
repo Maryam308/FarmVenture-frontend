@@ -1,25 +1,26 @@
 // src/components/ProductList/ProductList.jsx
-import { useState, useEffect, useMemo } from 'react';  
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback } from 'react';  
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './ProductList.module.css';
 import AuthorInfo from '../AuthorInfo/AuthorInfo';
 import * as productService from '../../services/productService';
+import * as favoriteService from '../../services/favoriteService';
 import { canViewProduct } from '../../services/productService';
 
 const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
-  const [showInactive, setShowInactive] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(!initialProducts.length);
   const [products, setLocalProducts] = useState(initialProducts);
+  const [favorites, setFavorites] = useState(new Set());
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
   
-  // New state variables for search, filtering, sorting, and pagination
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all'); // 'all' or specific category
-  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'price-low-high', 'price-high-low'
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(9); // Number of products per page
+  const [itemsPerPage] = useState(9);
+  const navigate = useNavigate();
 
-  // Extract unique categories from products
   const categories = useMemo(() => {
     const uniqueCategories = new Set();
     products.forEach(product => {
@@ -30,13 +31,76 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     return ['all', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
-  // For admins, fetch all products including inactive
+  // Fetch favorites for all authenticated users
+  const fetchFavorites = useCallback(async () => {
+    if (user) {
+      try {
+        setLoadingFavorites(true);
+        console.log('Fetching favorites for user:', user.id);
+        
+        // Use getFavoriteIds for lightweight fetching
+        const favoriteIds = await favoriteService.getFavoriteIds('product');
+        console.log('Received favorite IDs:', favoriteIds);
+        
+        // Convert array to Set
+        const favoriteSet = new Set(favoriteIds.products || []);
+        console.log('Setting favorites to:', Array.from(favoriteSet));
+        
+        setFavorites(favoriteSet);
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        setFavorites(new Set());
+      } finally {
+        setLoadingFavorites(false);
+      }
+    } else {
+      console.log('No user, clearing favorites');
+      setFavorites(new Set());
+      setLoadingFavorites(false);
+    }
+  }, [user]);
+
+  // Handle favorite toggle
+  const handleFavoriteToggle = async (productId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    const isFavorited = favorites.has(productId);
+    console.log('Toggling favorite for product', productId, 'current state:', isFavorited);
+    
+    try {
+      if (isFavorited) {
+        await favoriteService.removeFavorite(productId, 'product');
+        setFavorites(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(productId);
+          console.log('After remove, favorites:', Array.from(newSet));
+          return newSet;
+        });
+      } else {
+        await favoriteService.addFavorite(productId, 'product');
+        setFavorites(prev => {
+          const newSet = new Set([...prev, productId]);
+          console.log('After add, favorites:', Array.from(newSet));
+          return newSet;
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       if (user?.role === 'admin') {
         try {
           setLoading(true);
-          const allProducts = await productService.getAllProductsAdmin(true); // Get all including inactive
+          const allProducts = await productService.getAllProductsAdmin(true);
           setLocalProducts(allProducts);
           if (setProducts) setProducts(allProducts);
         } catch (error) {
@@ -61,13 +125,42 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     fetchProducts();
   }, [user, initialProducts.length, setProducts]);
 
-  // Handle status toggle for admin
+  // Fetch favorites on mount and when user changes
+  useEffect(() => {
+    console.log('ProductList useEffect triggered, user:', user);
+    fetchFavorites();
+  }, [fetchFavorites]);
+
+  // Listen for favorite updates from other components
+  useEffect(() => {
+    const handleStorageChange = (event) => {
+      if (event.key === 'favorites_updated') {
+        console.log('Favorites updated event detected, refreshing...');
+        fetchFavorites();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events
+    const handleFavoriteUpdate = () => {
+      console.log('Custom favorite update event detected, refreshing...');
+      fetchFavorites();
+    };
+    
+    window.addEventListener('favoriteUpdated', handleFavoriteUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('favoriteUpdated', handleFavoriteUpdate);
+    };
+  }, [fetchFavorites]);
+
   const handleToggleStatus = async (productId, currentStatus) => {
     try {
       const newStatus = !currentStatus;
       const updatedProduct = await productService.toggleProductActive(productId, newStatus);
       
-      // Update local state
       setLocalProducts(prev => prev.map(p => 
         p.id === productId ? updatedProduct : p
       ));
@@ -83,39 +176,29 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     }
   };
 
-  // Handle delete for admin
   const handleDelete = async (productId) => {
     try {
-        await productService.deleteProduct(productId);
-
-        // Update local state
-        setLocalProducts(prev => prev.filter(p => p.id !== productId));
-
-        if (setProducts) {
+      await productService.deleteProduct(productId);
+      setLocalProducts(prev => prev.filter(p => p.id !== productId));
+      if (setProducts) {
         setProducts(prev => prev.filter(p => p.id !== productId));
-        }
+      }
     } catch (error) {
-        console.error('Error deleting product:', error);
-        alert('Failed to delete product: ' + error.message);
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product: ' + error.message);
     }
- };
+  };
 
-
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
-    // Apply user role based filters
     if (user?.role === 'admin') {
-      // Admins can see all products, apply status filter
       if (statusFilter === 'active') filtered = filtered.filter(p => p.is_active);
       if (statusFilter === 'inactive') filtered = filtered.filter(p => !p.is_active);
     } else {
-      // Regular users only see active products
       filtered = filtered.filter(p => p.is_active);
     }
 
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(product => 
@@ -125,14 +208,12 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       );
     }
 
-    // Apply category filter
     if (categoryFilter !== 'all') {
       filtered = filtered.filter(product => 
         product.category.toLowerCase() === categoryFilter.toLowerCase()
       );
     }
 
-    // Apply sorting
     switch (sortBy) {
       case 'newest':
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -147,20 +228,17 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         filtered.sort((a, b) => b.price - a.price);
         break;
       default:
-        // Default to newest first
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
     return filtered;
   }, [products, user, statusFilter, searchQuery, categoryFilter, sortBy]);
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, categoryFilter, sortBy, statusFilter]);
@@ -169,40 +247,33 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   const inactiveCount = products.filter(p => !p.is_active).length;
   const totalCount = products.length;
 
-  // Handle page change
   const handlePageChange = (page) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Generate page numbers for pagination
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
     
     if (totalPages <= maxPagesToShow) {
-      // Show all pages if total pages is less than or equal to maxPagesToShow
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
     } else {
-      // Show limited pages with ellipsis
       if (currentPage <= 3) {
-        // Near the beginning
         for (let i = 1; i <= 4; i++) {
           pageNumbers.push(i);
         }
         pageNumbers.push('...');
         pageNumbers.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
-        // Near the end
         pageNumbers.push(1);
         pageNumbers.push('...');
         for (let i = totalPages - 3; i <= totalPages; i++) {
           pageNumbers.push(i);
         }
       } else {
-        // In the middle
         pageNumbers.push(1);
         pageNumbers.push('...');
         pageNumbers.push(currentPage - 1);
@@ -232,7 +303,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       <div className={styles.headerSection}>
         <div className={styles.titleRow}>
           <h1>Farm Products</h1>
-          {/* Create Product Button - Only for admins */}
           {user?.role === 'admin' && (
             <Link to="/products/new" className={styles.createButton}>
               + Create Product
@@ -240,7 +310,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           )}
         </div>
         
-        {/* Product Stats */}
         <div className={styles.stats}>
           <span className={styles.statActive}>{activeCount} Active</span>
           {user?.role === 'admin' && (
@@ -254,7 +323,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           )}
         </div>
         
-        {/* Search and Filter Bar */}
         <div className={styles.searchFilterBar}>
           <div className={styles.searchBox}>
             <input
@@ -276,7 +344,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           </div>
           
           <div className={styles.filterRow}>
-            {/* Category Filter */}
             <div className={styles.filterGroup}>
               <label htmlFor="categoryFilter" className={styles.filterLabel}>
                 Category:
@@ -296,7 +363,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
               </select>
             </div>
 
-            {/* Sort Options */}
             <div className={styles.filterGroup}>
               <label htmlFor="sortBy" className={styles.filterLabel}>
                 Sort by:
@@ -316,7 +382,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           </div>
         </div>
         
-        {/* Admin Controls - Only for admins */}
         {user?.role === 'admin' && (
           <div className={styles.adminControls}>
             <h3>Admin Controls</h3>
@@ -363,7 +428,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                 ✕ Clear Filters
               </button>
             )}
-            {/* Only show "Add New Product" button for admins */}
             {user?.role === 'admin' && (
               <Link to="/products/new" className={styles.addButton}>
                 ➕ Create Your First Product
@@ -393,7 +457,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                   to={`/products/${product.id}`} 
                   className={styles.productCard}
                   onClick={(e) => {
-                    // Check if user can view this product
                     if (!canViewProduct(product, user)) {
                       e.preventDefault();
                       alert('This product is currently inactive and cannot be viewed.');
@@ -401,7 +464,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                   }}
                 >
                   <article>
-                    {/* Product Image */}
                     <div className={styles.imageContainer}>
                       {product.image_url ? (
                         <img 
@@ -418,6 +480,18 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                       {!product.is_active && (
                         <div className={styles.inactiveBadge}>INACTIVE</div>
                       )}
+                      
+                      {/* Favorite Button - Show for all authenticated users */}
+                      {user && (
+                        <button
+                          className={`${styles.favoriteBtn} ${favorites.has(product.id) ? styles.favorited : ''}`}
+                          onClick={(e) => handleFavoriteToggle(product.id, e)}
+                          aria-label={favorites.has(product.id) ? 'Remove from favorites' : 'Add to favorites'}
+                          disabled={loadingFavorites}
+                        >
+                          {favorites.has(product.id) ? '❤️' : '🤍'}
+                        </button>
+                      )}
                     </div>
 
                     <div className={styles.productContent}>
@@ -432,14 +506,13 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
                       <div className={styles.productFooter}>
                         <span className={styles.price}>${product.price.toFixed(2)}</span>
                         <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
-                          {product.is_active ? ' Active' : ' Inactive'}
+                          {product.is_active ? '✓ Active' : '✗ Inactive'}
                         </span>
                       </div>
                     </div>
                   </article>
                 </Link>
                 
-                {/* Admin Action Buttons - Only show for admins */}
                 {user?.role === 'admin' && (
                   <div className={styles.adminActions}>
                     <button
@@ -460,7 +533,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className={styles.pagination}>
               <button
