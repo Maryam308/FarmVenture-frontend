@@ -5,6 +5,7 @@ import * as productService from "../../services/productService";
 import * as favoriteService from "../../services/favoriteService";
 import * as bookingService from "../../services/bookingService";
 import styles from "./Profile.module.css";
+import PopupAlert from "../PopupAlert/PopupAlert";
 
 const Profile = ({ user }) => {
   // Main tab state
@@ -26,6 +27,13 @@ const Profile = ({ user }) => {
 
   // Filter states
   const [bookingStatusFilter, setBookingStatusFilter] = useState("all");
+
+  const [showCancelPopup, setShowCancelPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   // MAIN DATA FETCH - runs once on mount and when user changes
   useEffect(() => {
@@ -221,19 +229,34 @@ const Profile = ({ user }) => {
     }
   };
 
-  // Handle cancel booking
-  const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm("Are you sure you want to cancel this booking?")) {
-      return;
-    }
+  // Handle cancel booking click
+  const handleCancelBookingClick = (bookingId) => {
+    setSelectedBookingId(bookingId);
+    setPopupMessage("Are you sure you want to cancel this booking?");
+    setShowCancelPopup(true);
+  };
+
+  // Handle cancel booking confirmation
+  const handleCancelBookingConfirm = async () => {
+    if (!selectedBookingId) return;
 
     try {
-      await bookingService.cancelBooking(bookingId);
-      alert("Booking cancelled successfully!");
-      fetchBookings(); // Refresh bookings
+      setCancelling(true);
+      await bookingService.cancelBooking(selectedBookingId);
+      setPopupMessage("Booking cancelled successfully!");
+      setShowSuccessPopup(true);
+
+      // Refresh bookings after success
+      fetchBookings();
+
+      // Clear selected booking
+      setSelectedBookingId(null);
     } catch (error) {
       console.error("Error cancelling booking:", error);
-      alert(error.message || "Failed to cancel booking");
+      setPopupMessage(error.message || "Failed to cancel booking");
+      setShowErrorPopup(true);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -274,6 +297,39 @@ const Profile = ({ user }) => {
 
   return (
     <main className={styles.container}>
+      <PopupAlert
+        isOpen={showCancelPopup}
+        onClose={() => setShowCancelPopup(false)}
+        title="Cancel Booking"
+        message={popupMessage}
+        type="warning"
+        confirmText="Yes, Cancel"
+        cancelText="No, Keep Booking"
+        showCancel={true}
+        onConfirm={handleCancelBookingConfirm}
+      />
+
+      <PopupAlert
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="Success"
+        message={popupMessage}
+        type="success"
+        confirmText="OK"
+        showCancel={false}
+        autoClose={true}
+        autoCloseTime={2000}
+      />
+
+      <PopupAlert
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title="Error"
+        message={popupMessage}
+        type="error"
+        confirmText="OK"
+        showCancel={false}
+      />
       <section className={styles.profileHeader}>
         <h1>My Profile</h1>
         <div className={styles.userInfo}>
@@ -499,7 +555,7 @@ const Profile = ({ user }) => {
                       </Link>
                       {booking.status === "upcoming" && (
                         <button
-                          onClick={() => handleCancelBooking(booking.id)}
+                          onClick={() => handleCancelBookingClick(booking.id)}
                           className={styles.cancelButton}
                         >
                           Cancel as Admin
@@ -839,7 +895,9 @@ const Profile = ({ user }) => {
                           </Link>
                           {booking.status === "upcoming" && (
                             <button
-                              onClick={() => handleCancelBooking(booking.id)}
+                              onClick={() =>
+                                handleCancelBookingClick(booking.id)
+                              }
                               className={styles.cancelButton}
                             >
                               Cancel Booking
