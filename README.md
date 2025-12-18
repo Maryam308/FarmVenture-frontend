@@ -5,7 +5,7 @@
 
 For detailed project tracking and task management, visit the deployment link, frontedn Repository and Trello board:
 
-[Deployment Link] 
+[Deployment Link](https://farm-venture-frontend.vercel.app)
 
 [FarmVenture Trello Board](https://trello.com/invite/b/693d3bfe239dd3df41931a58/ATTIc38c998028aa2321ba37d4e9e801e2f72BA0136B/farmventure)
 
