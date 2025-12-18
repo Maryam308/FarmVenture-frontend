@@ -40,6 +40,13 @@ Support local farms. Experience real agriculture.
 
 ---
 
+## 🧪 Test Admin Account (For Marking Purposes)
+Username: admin
+Password: admin
+
+---
+
+
 ## Attributions
 
 Images, and layout inspiration for this project were sourced from [Pinterest](https://www.pinterest.com/), focusing on visual appeal and modern UI.  
