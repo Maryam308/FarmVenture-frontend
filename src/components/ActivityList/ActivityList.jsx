@@ -582,7 +582,18 @@ const ActivityList = ({
                           <button className={styles.soldOutButton} disabled>
                             Sold Out
                           </button>
+                        ) : !user ? (
+                          // If user is NOT signed in, show disabled button
+                          <button
+                            className={styles.signInToBookButton}
+                            disabled
+                            title="Please sign in to book this activity"
+                          >
+                            <span className={styles.lockIcon}>🔒</span>
+                            Sign In to Book
+                          </button>
                         ) : (
+                          // If user IS signed in, show Book Now link
                           <Link
                             to={`/activities/${activity.id}/book`}
                             className={styles.bookButton}
