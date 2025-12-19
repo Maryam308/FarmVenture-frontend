@@ -1,0 +1,74 @@
+.container {
+  min-height: calc(100vh - 80px);
+  margin-top: 80px;
+  background: var(--content-bg);
+}
+
+.heroSection {
+  width: 100%;
+  height: 400px;
+  background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600') center/cover;
+  position: relative;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-brown);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroTitle {
+  color: var(--header-text);
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.contentSection {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.storyCard {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.storyCard h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.storyCard p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 1.1rem;
+  opacity: 1;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .contentSection {
+    padding: 2rem 1rem;
+  }
+
+  .storyCard {
+    padding: 1.5rem;
+  }
+}

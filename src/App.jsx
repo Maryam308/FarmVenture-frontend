@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import NavBar from "./components/NavBar/NavBar";
+import Footer from "./components/Footer/Footer";
 import Landing from "./components/Landing/Landing";
 import Dashboard from "./components/Dashboard/Dashboard";
 import SignupForm from "./components/SignupForm/SignupForm";
@@ -10,6 +11,7 @@ import ProductList from "./components/ProductList/ProductList";
 import ProductDetails from "./components/ProductDetails/ProductDetails";
 import ProductForm from "./components/ProductForm/ProductForm";
 import Profile from "./components/Profile/Profile";
+import OurStory from "./components/OurStory/OurStory";
 import * as authService from "../src/services/authService";
 import * as productService from "./services/productService";
 import * as activityService from "./services/activitiesService";
@@ -36,7 +38,6 @@ const App = () => {
       setUser(userData);
       setLoadingUser(false);
     };
-
     checkUser();
   }, []);
 
@@ -49,7 +50,6 @@ const App = () => {
 
   const handleBookingCreated = async (activityId) => {
     try {
-      // Refresh the specific activity
       const updatedActivity = await activityService.show(activityId);
       setActivities((prevActivities) =>
         prevActivities.map((activity) =>
@@ -86,14 +86,11 @@ const App = () => {
         productId,
         productFormData
       );
-      console.log("Updated product received:", updatedProduct);
-
       setProducts(
         products.map((product) =>
           product.id === productId ? updatedProduct : product
         )
       );
-
       return updatedProduct;
     } catch (error) {
       console.error("Error updating product:", error);
@@ -143,15 +140,11 @@ const App = () => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        // If user is admin, fetch all products including inactive
         if (user?.role === "admin") {
           const productData = await productService.getAllProductsAdmin(true);
-          console.log("Fetched admin products:", productData);
           setProducts(productData);
         } else {
-          // Regular users only see active products
           const productData = await productService.getAllProducts();
-          console.log("Fetched public products:", productData);
           setProducts(productData);
         }
       } catch (error) {
@@ -160,7 +153,6 @@ const App = () => {
         setLoadingProducts(false);
       }
     };
-
     if (!loadingUser) {
       fetchProducts();
     }
@@ -170,15 +162,11 @@ const App = () => {
     const fetchActivities = async () => {
       try {
         setLoadingActivities(true);
-        // If user is admin, fetch all activities
         if (user?.role === "admin") {
           const activityData = await activityService.getAllActivitiesAdmin();
-
           setActivities(activityData);
         } else {
-          // Regular users only see active activities
           const activityData = await activityService.index(false);
-
           setActivities(activityData);
         }
       } catch (error) {
@@ -186,7 +174,6 @@ const App = () => {
         setLoadingActivities(false);
       }
     };
-
     if (!loadingUser) {
       fetchActivities();
     }
@@ -197,129 +184,130 @@ const App = () => {
   }
 
   return (
-    <>
+    <div className="app-wrapper">
       <NavBar user={user} handleSignout={handleSignout} />
-      <Routes>
-        {user ? (
-          <>
-            <Route path="/" element={<Dashboard user={user} />} />
-            <Route
-              path="/activities/:activityId/book"
-              element={
-                <BookingForm
-                  user={user}
-                  onBookingCreated={handleBookingCreated}
-                />
-              }
-            />
-            <Route
-              path="/bookings/:bookingId"
-              element={<BookingDetails user={user} />}
-            />
-            <Route
-              path="/activities"
-              element={
-                <ActivityList
-                  user={user}
-                  activities={activities}
-                  setActivities={setActivities}
-                />
-              }
-            />
-            <Route
-              path="/activities/:activityId"
-              element={
-                <ActivityDetails
-                  user={user}
-                  handleDeleteActivity={handleDeleteActivity}
-                />
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <ProductList
-                  user={user}
-                  products={products}
-                  setProducts={setProducts}
-                />
-              }
-            />
-            <Route
-              path="/products/:productId"
-              element={
-                <ProductDetails
-                  user={user}
-                  handleDeleteProduct={handleDeleteProduct}
-                />
-              }
-            />
-            {/* Only show product creation form for admins */}
-            {user?.role === "admin" && (
-              <>
-                <Route
-                  path="/products/new"
-                  element={<ProductForm handleAddProduct={handleAddProduct} />}
-                />
-                <Route
-                  path="/products/:productId/edit"
-                  element={
-                    <ProductForm handleUpdateProduct={handleUpdateProduct} />
-                  }
-                />
-
-                <Route
-                  path="/activities/new"
-                  element={
-                    <ActivityForm handleAddActivity={handleAddActivity} />
-                  }
-                />
-                <Route
-                  path="/activities/:activityId/edit"
-                  element={
-                    <ActivityForm handleUpdateActivity={handleUpdateActivity} />
-                  }
-                />
-              </>
-            )}
-            <Route path="/profile" element={<Profile user={user} />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<Landing />} />
-            <Route
-              path="/products"
-              element={
-                <ProductList
-                  user={null}
-                  products={products}
-                  setProducts={setProducts}
-                />
-              }
-            />
-
-            <Route path="/products/:productId" element={<ProductDetails />} />
-
-            <Route
-              path="/activities"
-              element={
-                <ActivityList
-                  user={null}
-                  activities={activities}
-                  setActivities={setActivities}
-                />
-              }
-            />
-            <Route
-              path="/activities/:activityId"
-              element={<ActivityDetails />}
-            />
-          </>
-        )}
-        <Route path="/signup" element={<SignupForm setUser={setUser} />} />
-        <Route path="/signin" element={<SigninForm setUser={setUser} />} />
-      </Routes>
-    </>
+      <div className="main-content">
+        <Routes>
+          {user ? (
+            <>
+              <Route path="/" element={<Dashboard user={user} />} />
+              <Route
+                path="/activities/:activityId/book"
+                element={
+                  <BookingForm
+                    user={user}
+                    onBookingCreated={handleBookingCreated}
+                  />
+                }
+              />
+              <Route
+                path="/bookings/:bookingId"
+                element={<BookingDetails user={user} />}
+              />
+              <Route
+                path="/activities"
+                element={
+                  <ActivityList
+                    user={user}
+                    activities={activities}
+                    setActivities={setActivities}
+                  />
+                }
+              />
+              <Route
+                path="/activities/:activityId"
+                element={
+                  <ActivityDetails
+                    user={user}
+                    handleDeleteActivity={handleDeleteActivity}
+                  />
+                }
+              />
+              <Route
+                path="/products"
+                element={
+                  <ProductList
+                    user={user}
+                    products={products}
+                    setProducts={setProducts}
+                  />
+                }
+              />
+              <Route
+                path="/products/:productId"
+                element={
+                  <ProductDetails
+                    user={user}
+                    handleDeleteProduct={handleDeleteProduct}
+                  />
+                }
+              />
+              {user?.role === "admin" && (
+                <>
+                  <Route
+                    path="/products/new"
+                    element={<ProductForm handleAddProduct={handleAddProduct} />}
+                  />
+                  <Route
+                    path="/products/:productId/edit"
+                    element={
+                      <ProductForm handleUpdateProduct={handleUpdateProduct} />
+                    }
+                  />
+                  <Route
+                    path="/activities/new"
+                    element={
+                      <ActivityForm handleAddActivity={handleAddActivity} />
+                    }
+                  />
+                  <Route
+                    path="/activities/:activityId/edit"
+                    element={
+                      <ActivityForm handleUpdateActivity={handleUpdateActivity} />
+                    }
+                  />
+                </>
+              )}
+              <Route path="/profile" element={<Profile user={user} />} />
+              <Route path="/about" element={<OurStory />} />
+            </>
+          ) : (
+            <>
+              <Route path="/" element={<Landing />} />
+              <Route
+                path="/products"
+                element={
+                  <ProductList
+                    user={null}
+                    products={products}
+                    setProducts={setProducts}
+                  />
+                }
+              />
+              <Route path="/products/:productId" element={<ProductDetails />} />
+              <Route
+                path="/activities"
+                element={
+                  <ActivityList
+                    user={null}
+                    activities={activities}
+                    setActivities={setActivities}
+                  />
+                }
+              />
+              <Route
+                path="/activities/:activityId"
+                element={<ActivityDetails />}
+              />
+              <Route path="/about" element={<OurStory />} />
+            </>
+          )}
+          <Route path="/signup" element={<SignupForm setUser={setUser} />} />
+          <Route path="/signin" element={<SigninForm setUser={setUser} />} />
+        </Routes>
+      </div>
+      <Footer />
+    </div>
   );
 };
 

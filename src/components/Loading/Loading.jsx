@@ -4,9 +4,13 @@ import LoadingIcon from '../../assets/images/loading.svg';
 const Loading = () => {
   return (
     <main className={styles.container}>
-      <img src={LoadingIcon} alt="A cute owl" />
+      <div className={styles.loadingWrapper}>
+        <img src={LoadingIcon} alt="Loading" className={styles.loadingIcon} />
+        <div className={styles.loadingSpinner}></div>
+        <p className={styles.loadingText}>Loading...</p>
+      </div>
     </main>
-  )
-}
+  );
+};
 
 export default Loading;

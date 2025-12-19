@@ -1,89 +1,155 @@
-/* src/components/Dashboard/Dashboard.module.css */
 .container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+  margin-top: 80px;
+  background: var(--content-bg);
 }
 
-.welcomeSection {
-  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
-  color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
+.heroSection {
+  width: 100%;
+  height: 400px;
+  background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600') center/cover;
+  position: relative;
 }
 
-.welcomeSection h1 {
-  margin: 0 0 0.5rem 0;
-  font-size: 2rem;
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-brown);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.subtitle {
+.heroTitle {
+  color: var(--header-text);
+  font-size: 3.5rem;
+  font-weight: 700;
   margin: 0;
-  opacity: 0.9;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.contentSection {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.welcomeCard {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 8px;
+  margin-bottom: 3rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcomeCard h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.welcomeCard p {
+  color: var(--text-secondary);
+  line-height: 1.8;
   font-size: 1.1rem;
+  opacity: 1;
+  text-align: left;
 }
 
 .quickActions {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
 }
 
 .quickActions h2 {
-  margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
 }
 
-.actionGrid {
+.actionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
 }
 
 .actionCard {
-  display: block;
   background: white;
-  padding: 1.5rem;
   border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
   text-decoration: none;
-  color: inherit;
-  border: 1px solid #e0e0e0;
-  transition: transform 0.2s, box-shadow 0.2s;
+  color: var(--text-primary);
 }
 
 .actionCard:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.actionIcon {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.actionCard h3 {
-  margin: 0 0 0.5rem 0;
-  color: #333;
+.actionPlaceholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
 }
 
 .actionCard p {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 500;
   margin: 0;
-  color: #666;
-  font-size: 0.875rem;
+  opacity: 1;
 }
 
-.statsSection {
-  background: #f8f9fa;
-  padding: 2rem;
+.storySection {
+  background: white;
+  padding: 2.5rem;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.statsSection h2 {
-  margin: 0 0 1rem 0;
-  color: #333;
+.storySection h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
-.statsDescription {
-  margin: 0;
-  color: #666;
-  line-height: 1.6;
+.storySection p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 1.1rem;
+  opacity: 1;
+  text-align: left;
+}
+
+@media (max-width: 1024px) {
+  .actionsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .contentSection {
+    padding: 2rem 1rem;
+  }
+
+  .actionsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .welcomeCard,
+  .storySection {
+    padding: 1.5rem;
+  }
 }

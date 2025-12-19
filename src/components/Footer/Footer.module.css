@@ -1,0 +1,25 @@
+.footer {
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  padding: 2rem;
+  margin-top: auto;
+}
+
+.footerContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footerContainer p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 1.5rem 1rem;
+  }
+}

@@ -4,71 +4,50 @@ import styles from "./Landing.module.css";
 const Landing = () => {
   return (
     <main className={styles.container}>
-      <section className={styles.hero}>
-        <h1>Welcome to FarmVenture 🌱</h1>
-        <p className={styles.subtitle}>
-          Your local marketplace for fresh farm products directly from farmers.
-        </p>
-        <div className={styles.ctaButtons}>
-          <Link to="/signup" className={styles.primaryButton}>
-            Join FarmVenture
-          </Link>
-          <Link to="/products" className={styles.secondaryButton}>
-            Browse Products
-          </Link>
-          <Link to="/activities" className={styles.secondaryButton}>
-            Browse Activities
-          </Link>
+      <div className={styles.heroSection}>
+        <div className={styles.heroOverlay}>
+          <h1 className={styles.heroTitle}>FarmVenture</h1>
         </div>
-      </section>
+      </div>
 
-      <section className={styles.features}>
-        <h2>Why Choose FarmVenture?</h2>
-        <div className={styles.featuresGrid}>
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🌾</div>
-            <h3>Direct from Farm</h3>
-            <p>Connect directly with local farmers for the freshest produce.</p>
+      <div className={styles.contentSection}>
+        <section className={styles.aboutSection}>
+          <h2>About Us:</h2>
+          <p>
+            Welcome to FarmVenture - your local marketplace for fresh farm products 
+            and agricultural experiences. We connect farmers directly with customers, 
+            ensuring the freshest produce and authentic farm experiences.
+          </p>
+        </section>
+
+        <section className={styles.featuresSection}>
+          <h2>Recent Products</h2>
+          <div className={styles.featuresGrid}>
+            <div className={styles.featureCard}>
+              <div className={styles.cardPlaceholder}></div>
+            </div>
+            <div className={styles.featureCard}>
+              <div className={styles.cardPlaceholder}></div>
+            </div>
+            <div className={styles.featureCard}>
+              <div className={styles.cardPlaceholder}></div>
+            </div>
           </div>
+        </section>
 
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>💰</div>
-            <h3>Fair Prices</h3>
+        <section className={styles.farmSection}>
+          <div className={styles.farmImageContainer}>
+            <div className={styles.farmImagePlaceholder}></div>
+          </div>
+          <div className={styles.farmTextContent}>
+            <h2>Experience farm life at its best</h2>
             <p>
-              Better prices for both farmers and customers without middlemen.
+              Join us for authentic farm experiences, learn about sustainable 
+              agriculture, and enjoy the freshest products straight from the source.
             </p>
           </div>
-
-          <div className={styles.featureCard}>
-            <div className={styles.featureIcon}>🤝</div>
-            <h3>Community Focused</h3>
-            <p>
-              Support your local farming community and sustainable agriculture.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.howItWorks}>
-        <h2>How It Works</h2>
-        <div className={styles.steps}>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>1</span>
-            <h3>Browse Products</h3>
-            <p>Explore fresh farm products in your area</p>
-          </div>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>2</span>
-            <h3>Create Account</h3>
-            <p>Sign up as a buyer or seller</p>
-          </div>
-          <div className={styles.step}>
-            <span className={styles.stepNumber}>3</span>
-            <h3>Connect & Trade</h3>
-            <p>Start buying or selling farm products</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 };
