@@ -59,10 +59,11 @@ Password: admin
 
 ## Attributions
 
-Images, and layout inspiration for this project were sourced from [Pinterest](https://www.pinterest.com/), focusing on visual appeal and modern UI.  
+- Images, and layout inspiration for this project were sourced from [Pinterest](https://www.pinterest.com/), focusing on visual appeal and modern UI.
+- Icon library [Lucide React](https://lucide.dev/) 
+
 
 > These assets are used for educational purposes and UI/UX inspiration only. All rights belong to the original creators.
-
 
 ---
 
