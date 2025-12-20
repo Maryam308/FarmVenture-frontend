@@ -1,104 +1,255 @@
 .container {
-  position: fixed;
-  top: 80px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: calc(100vh - 80px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: calc(100vh - 80px);
+  margin-top: 80px;
   background: var(--content-bg);
-  z-index: 100;
 }
 
-.loadingWrapper {
+.contentSection {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.aboutSection {
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  text-align: center;
+}
+
+.aboutSection h2 {
+  color: var(--text-primary);
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.aboutSection p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 1.1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.featuresSection {
+  margin-bottom: 3rem;
+}
+
+.featuresSection h2 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  margin-bottom: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.featureCard {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(46, 204, 113, 0.15);
+  border-color: var(--accent-green);
+}
+
+.cardImageProducts {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), 
+              url('https://i.pinimg.com/736x/3b/3a/2e/3b3a2e5e79984e39417389c8ed620979.jpg') center/cover;
+}
+
+.cardImageActivities {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), 
+              url('https://i.pinimg.com/1200x/4a/de/3c/4ade3c26dc8fd47e2fd8d960deeb5a99.jpg') center/cover;
+}
+
+.cardImageStory {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), 
+              url('https://i.pinimg.com/736x/2f/2f/ff/2f2fff32ebf2177313bf5b918958a8a6.jpg') center/cover;
+}
+
+.cardContent {
+  padding: 2rem;
+  text-align: center;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  max-width: 500px;
-  width: 100%;
 }
 
-.loadingIcon {
-  width: 100%;
-  max-width: 300px;
-  height: auto;
-  margin-bottom: 2rem;
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.loadingSpinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--accent-green);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.loadingText {
+.featureCard h3 {
   color: var(--text-primary);
-  font-size: 1.2rem;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
   font-weight: 600;
+}
+
+.featureCard p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1rem;
   margin: 0;
-  animation: pulse 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+.farmSection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  align-items: center;
+}
+
+.farmImageContainer {
+  width: 100%;
+}
+
+.farmImagePlaceholder {
+  width: 100%;
+  height: 400px;
+  background: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05)), 
+              url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2942&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.farmTextContent h2 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.farmTextContent p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.ctaButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.primaryButton {
+  background: var(--accent-green);
+  color: white;
+  flex: 1;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.secondaryButton {
+  background: white;
+  color: var(--accent-green);
+  border: 2px solid var(--accent-green);
+  flex: 1;
+}
+
+.secondaryButton:hover {
+  background: var(--accent-green);
+  color: white;
+}
+
+@media (max-width: 1024px) {
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
-  50% {
-    opacity: 0.5;
+
+  .farmSection {
+    grid-template-columns: 1fr;
+  }
+
+  .farmImagePlaceholder {
+    height: 300px;
   }
 }
 
-@media only screen and (max-height: 600px) {
-  .loadingIcon {
-    max-width: 200px;
-    margin-bottom: 1rem;
+@media (max-width: 768px) {
+  .contentSection {
+    padding: 2rem 1rem;
   }
 
-  .loadingSpinner {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 1rem;
+  .aboutSection {
+    padding: 2rem 1.5rem;
   }
 
-  .loadingText {
-    font-size: 1rem;
-  }
-}
-
-@media only screen and (max-width: 500px) {
-  .loadingIcon {
-    max-width: 250px;
+  .aboutSection h2 {
+    font-size: 1.8rem;
   }
 
-  .loadingWrapper {
-    padding: 1rem;
+  .featuresSection h2 {
+    font-size: 1.6rem;
+  }
+
+  .featuresGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .farmSection {
+    padding: 2rem 1.5rem;
+  }
+
+  .farmTextContent h2 {
+    font-size: 1.6rem;
+  }
+
+  .ctaButtons {
+    flex-direction: column;
+  }
+
+  .farmImagePlaceholder {
+    height: 250px;
+  }
+
+  .cardImageProducts,
+  .cardImageActivities,
+  .cardImageStory {
+    height: 180px;
   }
 }
