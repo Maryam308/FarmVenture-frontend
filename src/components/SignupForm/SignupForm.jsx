@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as authService from "../../services/authService";
-
 import styles from "./SignupForm.module.css";
-import SignupIcon from "../../assets/images/signup.svg";
 
 const SignupForm = (props) => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState([""]);
+  const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -34,25 +32,26 @@ const SignupForm = (props) => {
     }
   };
 
-  // Destructure all fields including email
   const { username, email, password, passwordConf } = formData;
-
+  
   const isFormInvalid = () => {
     return !(username && email && password && password === passwordConf);
   };
 
   return (
     <main className={styles.container}>
-      <section>
-        <img src={SignupIcon} alt="An owl sitting on a sign" />
+      <section className={styles.farmBackground}>
+        <div className={styles.overlay}>
+          <h1 className={styles.welcomeTitle}>Join FarmVenture</h1>
+          <p className={styles.welcomeText}>Create an account to discover farm products and activities</p>
+        </div>
       </section>
-      <section>
-        <form onSubmit={handleSubmit}>
-          <h1>Sign Up</h1>
-          <p>{message}</p>
-
-          {/* Username Field */}
-          <div>
+      <section className={styles.formSection}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <h1 className={styles.formTitle}>Sign Up</h1>
+          {message && <p className={styles.errorMessage}>{message}</p>}
+          
+          <div className={styles.formGroup}>
             <label htmlFor="username">Username:</label>
             <input
               type="text"
@@ -63,8 +62,8 @@ const SignupForm = (props) => {
               required
             />
           </div>
-
-          <div>
+          
+          <div className={styles.formGroup}>
             <label htmlFor="email">Email:</label>
             <input
               type="email"
@@ -75,9 +74,8 @@ const SignupForm = (props) => {
               required
             />
           </div>
-
-          {/* Password Field */}
-          <div>
+          
+          <div className={styles.formGroup}>
             <label htmlFor="password">Password:</label>
             <input
               type="password"
@@ -88,9 +86,8 @@ const SignupForm = (props) => {
               required
             />
           </div>
-
-          {/* Password Confirmation Field */}
-          <div>
+          
+          <div className={styles.formGroup}>
             <label htmlFor="confirm">Confirm Password:</label>
             <input
               type="password"
@@ -101,12 +98,22 @@ const SignupForm = (props) => {
               required
             />
           </div>
-
-          <div>
-            <button disabled={isFormInvalid()}>Sign Up</button>
-            <Link to="/">
-              <button type="button">Cancel</button>
+          
+          <div className={styles.buttonGroup}>
+            <button 
+              type="submit" 
+              className={styles.submitButton}
+              disabled={isFormInvalid()}
+            >
+              Sign Up
+            </button>
+            <Link to="/" className={styles.cancelLink}>
+              <button type="button" className={styles.cancelButton}>Cancel</button>
             </Link>
+          </div>
+
+          <div className={styles.signinPrompt}>
+            <p>Already have an account? <Link to="/signin">Sign In</Link></p>
           </div>
         </form>
       </section>

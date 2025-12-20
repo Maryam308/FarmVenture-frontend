@@ -1,11 +1,11 @@
-// src/components/ProductList/ProductList.jsx
 import { useState, useEffect, useMemo, useCallback } from 'react';  
 import { Link, useNavigate } from 'react-router-dom';
+import HeroSection from '../HeroSection/HeroSection';
 import styles from './ProductList.module.css';
-import AuthorInfo from '../AuthorInfo/AuthorInfo';
 import * as productService from '../../services/productService';
 import * as favoriteService from '../../services/favoriteService';
 import { canViewProduct } from '../../services/productService';
+import PopupAlert from '../PopupAlert/PopupAlert';
 
 const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   const [statusFilter, setStatusFilter] = useState('all');
@@ -16,10 +16,19 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [dateSort, setDateSort] = useState('newest'); // 'newest', 'oldest', 'none'
-  const [priceSort, setPriceSort] = useState('none'); // 'low-high', 'high-low', 'none'
+  const [dateSort, setDateSort] = useState('newest');
+  const [priceSort, setPriceSort] = useState('none');
+  const [nameSort, setNameSort] = useState('none');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
+  
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  
   const navigate = useNavigate();
 
   const categories = useMemo(() => {
@@ -32,7 +41,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     return ['all', ...Array.from(uniqueCategories).sort()];
   }, [products]);
 
-  // Fetch favorites for customers only
   const fetchFavorites = useCallback(async () => {
     if (user && user.role === 'customer') {
       try {
@@ -41,7 +49,6 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         const favoriteSet = new Set(favoriteIds.products || []);
         setFavorites(favoriteSet);
       } catch (error) {
-        console.error('Error fetching favorites:', error);
         setFavorites(new Set());
       } finally {
         setLoadingFavorites(false);
@@ -52,13 +59,12 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     }
   }, [user]);
 
-  // Handle favorite toggle
   const handleFavoriteToggle = async (productId, e) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (!user) {
-      navigate('/login');
+      navigate('/signin');
       return;
     }
 
@@ -81,7 +87,8 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         setFavorites(prev => new Set([...prev, productId]));
       }
     } catch (error) {
-      console.error('Error toggling favorite:', error);
+      setErrorMessage('Failed to update favorite: ' + error.message);
+      setShowErrorPopup(true);
     }
   };
 
@@ -94,7 +101,8 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           setLocalProducts(allProducts);
           if (setProducts) setProducts(allProducts);
         } catch (error) {
-          console.error('Error fetching admin products:', error);
+          setErrorMessage('Failed to load products');
+          setShowErrorPopup(true);
         } finally {
           setLoading(false);
         }
@@ -105,7 +113,8 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           setLocalProducts(publicProducts);
           if (setProducts) setProducts(publicProducts);
         } catch (error) {
-          console.error('Error fetching public products:', error);
+          setErrorMessage('Failed to load products');
+          setShowErrorPopup(true);
         } finally {
           setLoading(false);
         }
@@ -139,7 +148,10 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     };
   }, [fetchFavorites]);
 
-  const handleToggleStatus = async (productId, currentStatus) => {
+  const handleToggleStatus = async (productId, currentStatus, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
       const newStatus = !currentStatus;
       const updatedProduct = await productService.toggleProductActive(productId, newStatus);
@@ -153,30 +165,47 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
           p.id === productId ? updatedProduct : p
         ));
       }
+      
+      setSuccessMessage(`Product ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+      setShowSuccessPopup(true);
     } catch (error) {
-      console.error('Error toggling product status:', error);
-      alert('Failed to update product status: ' + error.message);
+      setErrorMessage('Failed to update product status: ' + error.message);
+      setShowErrorPopup(true);
     }
   };
 
-  const handleDelete = async (productId) => {
+  const handleDeleteClick = (productId, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setSelectedProductId(productId);
+    setShowDeletePopup(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedProductId) return;
+    
     try {
-      await productService.deleteProduct(productId);
-      setLocalProducts(prev => prev.filter(p => p.id !== productId));
+      await productService.deleteProduct(selectedProductId);
+      setLocalProducts(prev => prev.filter(p => p.id !== selectedProductId));
       if (setProducts) {
-        setProducts(prev => prev.filter(p => p.id !== productId));
+        setProducts(prev => prev.filter(p => p.id !== selectedProductId));
       }
+      setSuccessMessage('Product deleted successfully!');
+      setShowSuccessPopup(true);
     } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Failed to delete product: ' + error.message);
+      setErrorMessage('Failed to delete product: ' + error.message);
+      setShowErrorPopup(true);
     }
+    
+    setSelectedProductId(null);
   };
 
-  // Handle sort changes - reset other sort when one is selected
   const handleDateSortChange = (value) => {
     setDateSort(value);
     if (value !== 'none') {
       setPriceSort('none');
+      setNameSort('none');
     }
   };
 
@@ -184,6 +213,15 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     setPriceSort(value);
     if (value !== 'none') {
       setDateSort('none');
+      setNameSort('none');
+    }
+  };
+
+  const handleNameSortChange = (value) => {
+    setNameSort(value);
+    if (value !== 'none') {
+      setDateSort('none');
+      setPriceSort('none');
     }
   };
 
@@ -212,7 +250,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       );
     }
 
-    // Apply sorting - date takes priority over price
+    // Apply sorting based on active sort option
     if (dateSort !== 'none') {
       if (dateSort === 'newest') {
         filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -225,13 +263,19 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
       } else if (priceSort === 'high-low') {
         filtered.sort((a, b) => b.price - a.price);
       }
+    } else if (nameSort !== 'none') {
+      if (nameSort === 'az') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (nameSort === 'za') {
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+      }
     } else {
       // Default sort by newest
       filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     }
 
     return filtered;
-  }, [products, user, statusFilter, searchQuery, categoryFilter, dateSort, priceSort]);
+  }, [products, user, statusFilter, searchQuery, categoryFilter, dateSort, priceSort, nameSort]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -240,7 +284,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, dateSort, priceSort, statusFilter]);
+  }, [searchQuery, categoryFilter, dateSort, priceSort, nameSort, statusFilter]);
 
   const activeCount = products.filter(p => p.is_active).length;
   const inactiveCount = products.filter(p => !p.is_active).length;
@@ -286,21 +330,28 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
     return pageNumbers;
   };
 
-  // Get sort label for display
   const getActiveSortLabel = () => {
-    if (dateSort === 'newest') return 'Newest to Oldest';
-    if (dateSort === 'oldest') return 'Oldest to Newest';
-    if (priceSort === 'low-high') return 'Price: Low to High';
-    if (priceSort === 'high-low') return 'Price: High to Low';
-    return 'Newest to Oldest (Default)';
+    if (dateSort !== 'none') {
+      return dateSort === 'newest' ? 'Sorted by: Date (Newest First)' : 'Sorted by: Date (Oldest First)';
+    }
+    if (priceSort !== 'none') {
+      return priceSort === 'low-high' ? 'Sorted by: Price (Low to High)' : 'Sorted by: Price (High to Low)';
+    }
+    if (nameSort !== 'none') {
+      return nameSort === 'az' ? 'Sorted by: Name (A-Z)' : 'Sorted by: Name (Z-A)';
+    }
+    return 'Sorted by: Date (Newest First)';
   };
 
   if (loading) {
     return (
       <main className={styles.container}>
-        <div className={styles.emptyState}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Loading products...</p>
+        <HeroSection title="FarmVenture" height="300px" />
+        <div className={styles.contentSection}>
+          <div className={styles.emptyState}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading products...</p>
+          </div>
         </div>
       </main>
     );
@@ -308,277 +359,355 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
 
   return (
     <main className={styles.container}>
-      <div className={styles.headerSection}>
-        <div className={styles.titleRow}>
-          <h1>Farm Products</h1>
-          {user?.role === 'admin' && (
-            <Link to="/products/new" className={styles.createButton}>
-              + Create Product
-            </Link>
-          )}
-        </div>
-        
-        <div className={styles.stats}>
-          <span className={styles.statActive}>{activeCount} Active</span>
-          {user?.role === 'admin' && (
-            <span className={styles.statInactive}>{inactiveCount} Inactive</span>
-          )}
-          <span className={styles.statTotal}>{totalCount} Total</span>
-          {searchQuery && (
-            <span className={styles.searchResults}>
-              {filteredProducts.length} results for "{searchQuery}"
-            </span>
-          )}
-        </div>
-        
-        <div className={styles.searchFilterBar}>
-          <div className={styles.searchBox}>
-            <input
-              type="text"
-              placeholder="Search products by name, description, or category..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
-            {searchQuery && (
-              <button 
-                className={styles.clearSearch}
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          
-          <div className={styles.filterRow}>
-            <div className={styles.filterGroup}>
-              <label htmlFor="categoryFilter" className={styles.filterLabel}>
-                Category:
-              </label>
-              <select
-                id="categoryFilter"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="all">All Categories</option>
-                {categories.filter(cat => cat !== 'all').map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <PopupAlert
+        isOpen={showDeletePopup}
+        onClose={() => setShowDeletePopup(false)}
+        title="Delete Product"
+        message="Are you sure you want to permanently delete this product? This action cannot be undone."
+        type="warning"
+        confirmText="Yes, Delete"
+        cancelText="Cancel"
+        showCancel={true}
+        onConfirm={handleDeleteConfirm}
+      />
 
-            <div className={styles.filterGroup}>
-              <label htmlFor="dateSort" className={styles.filterLabel}>
-                Sort by Date:
-              </label>
-              <select
-                id="dateSort"
-                value={dateSort}
-                onChange={(e) => handleDateSortChange(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="none">No Date Sort</option>
-                <option value="newest">Newest to Oldest</option>
-                <option value="oldest">Oldest to Newest</option>
-              </select>
-            </div>
+      <PopupAlert
+        isOpen={showErrorPopup}
+        onClose={() => setShowErrorPopup(false)}
+        title="Error"
+        message={errorMessage}
+        type="error"
+        confirmText="OK"
+        showCancel={false}
+      />
 
-            <div className={styles.filterGroup}>
-              <label htmlFor="priceSort" className={styles.filterLabel}>
-                Sort by Price:
-              </label>
-              <select
-                id="priceSort"
-                value={priceSort}
-                onChange={(e) => handlePriceSortChange(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="none">No Price Sort</option>
-                <option value="low-high">Low to High</option>
-                <option value="high-low">High to Low</option>
-              </select>
-            </div>
-          </div>
-        </div>
-        
-        {user?.role === 'admin' && (
-          <div className={styles.adminControls}>
-            <h3>Admin Controls</h3>
-            <div className={styles.filterControls}>
-              <div className={styles.filterGroup}>
-                <label htmlFor="statusFilter">Filter by Status:</label>
-                <select
-                  id="statusFilter"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className={styles.filterSelect}
-                >
-                  <option value="all">All Products</option>
-                  <option value="active">Active Only</option>
-                  <option value="inactive">Inactive Only</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {filteredProducts.length === 0 ? (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyIcon}>🔍</div>
-          <p>
-            {searchQuery 
-              ? `No products found matching "${searchQuery}"`
-              : categoryFilter !== 'all'
-              ? `No products found in the "${categoryFilter}" category`
-              : user?.role === 'admin' && statusFilter !== 'all'
-              ? `No ${statusFilter} products found`
-              : 'No products available.'}
-          </p>
-          <div className={styles.emptyStateButtonGroup}>
-            {(searchQuery || categoryFilter !== 'all') && (
-              <button 
-                className={styles.clearFiltersButton}
-                onClick={() => {
-                  setSearchQuery('');
-                  setCategoryFilter('all');
-                }}
-              >
-                ✕ Clear Filters
-              </button>
-            )}
+      <PopupAlert
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+        title="Success"
+        message={successMessage}
+        type="success"
+        confirmText="OK"
+        showCancel={false}
+        autoClose={true}
+        autoCloseTime={2000}
+      />
+
+      <HeroSection title="FarmVenture" height="300px" />
+
+      <div className={styles.contentSection}>
+        <div className={styles.headerSection}>
+          <div className={styles.titleRow}>
+            <h1>Farm Products</h1>
             {user?.role === 'admin' && (
-              <Link to="/products/new" className={styles.addButton}>
-                ➕ Create Your First Product
+              <Link to="/products/new" className={styles.createButton}>
+                + Create Product
               </Link>
             )}
           </div>
+          
+          <div className={styles.stats}>
+            <span className={styles.statActive}>{activeCount} Active</span>
+            {user?.role === 'admin' && (
+              <span className={styles.statInactive}>{inactiveCount} Inactive</span>
+            )}
+            <span className={styles.statTotal}>{totalCount} Total</span>
+            {searchQuery && (
+              <span className={styles.searchResults}>
+                {filteredProducts.length} results for "{searchQuery}"
+              </span>
+            )}
+          </div>
+          
+          <div className={styles.searchFilterBar}>
+            <div className={styles.searchBox}>
+              <input
+                type="text"
+                placeholder="Search products by name, description, or category..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+              {searchQuery && (
+                <button 
+                  className={styles.clearSearch}
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            
+            <div className={styles.filterRow}>
+              <div className={styles.filterGroup}>
+                <label htmlFor="categoryFilter" className={styles.filterLabel}>
+                  Category:
+                </label>
+                <select
+                  id="categoryFilter"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="all">All Categories</option>
+                  {categories.filter(cat => cat !== 'all').map(category => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label htmlFor="dateSort" className={styles.filterLabel}>
+                  Sort by Date:
+                </label>
+                <select
+                  id="dateSort"
+                  value={dateSort}
+                  onChange={(e) => handleDateSortChange(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="none">No Date Sort</option>
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label htmlFor="priceSort" className={styles.filterLabel}>
+                  Sort by Price:
+                </label>
+                <select
+                  id="priceSort"
+                  value={priceSort}
+                  onChange={(e) => handlePriceSortChange(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="none">No Price Sort</option>
+                  <option value="low-high">Low to High</option>
+                  <option value="high-low">High to Low</option>
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label htmlFor="nameSort" className={styles.filterLabel}>
+                  Sort by Name:
+                </label>
+                <select
+                  id="nameSort"
+                  value={nameSort}
+                  onChange={(e) => handleNameSortChange(e.target.value)}
+                  className={styles.filterSelect}
+                >
+                  <option value="none">No Name Sort</option>
+                  <option value="az">A-Z</option>
+                  <option value="za">Z-A</option>
+                </select>
+              </div>
+
+              {user?.role === 'admin' && (
+                <div className={styles.filterGroup}>
+                  <label htmlFor="statusFilter" className={styles.filterLabel}>
+                    Status:
+                  </label>
+                  <select
+                    id="statusFilter"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={styles.filterSelect}
+                  >
+                    <option value="all">All Products</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      ) : (
-        <>
-          <div className={styles.grid}>
-            {currentProducts.map((product) => (
-              <div key={product.id} className={styles.productCardWrapper}>
-                <Link 
-                  to={`/products/${product.id}`} 
-                  className={styles.productCard}
-                  onClick={(e) => {
-                    if (!canViewProduct(product, user)) {
-                      e.preventDefault();
-                      alert('This product is currently inactive and cannot be viewed.');
-                    }
+        
+        {filteredProducts.length === 0 ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>🔍</div>
+            <p>
+              {searchQuery 
+                ? `No products found matching "${searchQuery}"`
+                : categoryFilter !== 'all'
+                ? `No products found in the "${categoryFilter}" category`
+                : user?.role === 'admin' && statusFilter !== 'all'
+                ? `No ${statusFilter} products found`
+                : 'No products available.'}
+            </p>
+            <div className={styles.emptyStateButtonGroup}>
+              {(searchQuery || categoryFilter !== 'all') && (
+                <button 
+                  className={styles.clearFiltersButton}
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCategoryFilter('all');
                   }}
                 >
-                  <article>
-                    <div className={styles.imageContainer}>
-                      {product.image_url ? (
-                        <img 
-                          src={product.image_url} 
-                          alt={product.name} 
-                          className={styles.productImage}
-                        />
-                      ) : (
-                        <div className={styles.noImage}>
-                          <span>🌱</span>
-                          <p>No Image</p>
-                        </div>
-                      )}
-                      {!product.is_active && (
-                        <div className={styles.inactiveBadge}>INACTIVE</div>
-                      )}
-                      
-                      {user?.role === 'customer' && (
-                        <button
-                          className={`${styles.favoriteBtn} ${favorites.has(product.id) ? styles.favorited : ''}`}
-                          onClick={(e) => handleFavoriteToggle(product.id, e)}
-                          aria-label={favorites.has(product.id) ? 'Remove from favorites' : 'Add to favorites'}
-                          disabled={loadingFavorites}
-                        >
-                          {favorites.has(product.id) ? '❤️' : '🤍'}
-                        </button>
-                      )}
-                    </div>
-
-                    <div className={styles.productContent}>
-                      <header>
-                        <div className={styles.productHeader}>
-                          <h2>{product.name}</h2>
-                          <span className={styles.category}>{product.category}</span>
-                        </div>
-                        <AuthorInfo content={product} />
-                      </header>
-                      <p className={styles.description}>{product.description}</p>
-                      <div className={styles.productFooter}>
-                        <span className={styles.price}>${product.price.toFixed(2)}</span>
-                        <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
-                          {product.is_active ? '✓ Active' : '✗ Inactive'}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
+                  ✕ Clear Filters
+                </button>
+              )}
+              {user?.role === 'admin' && (
+                <Link to="/products/new" className={styles.addButton}>
+                  ➕ Create Your First Product
                 </Link>
-                
-                {user?.role === 'admin' && (
-                  <div className={styles.adminActions}>
-                    <button
-                      onClick={() => handleToggleStatus(product.id, product.is_active)}
-                      className={styles.toggleActiveBtn}
-                    >
-                      {product.is_active ? 'Deactivate' : 'Activate'}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <button
-                className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                ← Previous
-              </button>
-              
-              <div className={styles.pageNumbers}>
-                {getPageNumbers().map((page, index) => (
-                  page === '...' ? (
-                    <span key={`ellipsis-${index}`} className={styles.ellipsis}>...</span>
-                  ) : (
-                    <button
-                      key={page}
-                      className={`${styles.pageButton} ${currentPage === page ? styles.active : ''}`}
-                      onClick={() => handlePageChange(page)}
-                    >
-                      {page}
-                    </button>
-                  )
-                ))}
-              </div>
-              
-              <button
-                className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next →
-              </button>
+              )}
             </div>
-          )}
-        </>
-      )}
+          </div>
+        ) : (
+          <>
+            <div className={styles.resultsInfo}>
+              <p>
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of{' '}
+                {filteredProducts.length} products
+                {searchQuery && ` for "${searchQuery}"`}
+              </p>
+              <div className={styles.sortIndicator}>
+                {getActiveSortLabel()}
+              </div>
+            </div>
+
+            <div className={styles.grid}>
+              {currentProducts.map((product) => (
+                <div key={product.id} className={styles.productCardWrapper}>
+                  <div className={styles.productCard}>
+                    <Link 
+                      to={`/products/${product.id}`} 
+                      className={styles.cardLink}
+                      onClick={(e) => {
+                        if (!canViewProduct(product, user)) {
+                          e.preventDefault();
+                          setErrorMessage('This product is currently inactive and cannot be viewed.');
+                          setShowErrorPopup(true);
+                        }
+                      }}
+                    >
+                      <article>
+                        <div className={styles.imageContainer}>
+                          {product.image_url ? (
+                            <img 
+                              src={product.image_url} 
+                              alt={product.name} 
+                              className={styles.productImage}
+                            />
+                          ) : (
+                            <div className={styles.noImage}>
+                              <span>🌱</span>
+                              <p>No Image</p>
+                            </div>
+                          )}
+                          
+                          {!product.is_active && (
+                            <div className={styles.inactiveBadge}>INACTIVE</div>
+                          )}
+                          
+                          {user?.role === 'customer' && (
+                            <button
+                              className={`${styles.favoriteBtn} ${favorites.has(product.id) ? styles.favorited : ''}`}
+                              onClick={(e) => handleFavoriteToggle(product.id, e)}
+                              aria-label={favorites.has(product.id) ? 'Remove from favorites' : 'Add to favorites'}
+                              disabled={loadingFavorites}
+                            >
+                              {favorites.has(product.id) ? '❤️' : '🤍'}
+                            </button>
+                          )}
+                        </div>
+
+                        <div className={styles.productContent}>
+                          <header>
+                            <div className={styles.productHeader}>
+                              <h2>{product.name}</h2>
+                              <div className={styles.priceTag}>
+                                BHD {product.price.toFixed(2)}
+                              </div>
+                            </div>
+                          </header>
+                          
+                          <div className={styles.categoryInfo}>
+                            <span className={styles.category}>{product.category}</span>
+                            <span className={`${styles.status} ${product.is_active ? styles.active : styles.inactive}`}>
+                              {product.is_active ? '✓ Active' : '✗ Inactive'}
+                            </span>
+                          </div>
+                          
+                          <p className={styles.description}>{product.description}</p>
+                        </div>
+                      </article>
+                    </Link>
+                    
+                    {user?.role === 'admin' && (
+                      <div className={styles.adminActions}>
+                        <Link
+                          to={`/products/${product.id}/edit`}
+                          className={styles.editBtn}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Edit
+                        </Link>
+                        
+                        <button
+                          onClick={(e) => handleToggleStatus(product.id, product.is_active, e)}
+                          className={styles.toggleBtn}
+                        >
+                          {product.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        
+                        <button
+                          onClick={(e) => handleDeleteClick(product.id, e)}
+                          className={styles.deleteBtn}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className={styles.pagination}>
+                <button
+                  className={`${styles.pageButton} ${currentPage === 1 ? styles.disabled : ''}`}
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  ← Previous
+                </button>
+                
+                <div className={styles.pageNumbers}>
+                  {getPageNumbers().map((page, index) => (
+                    page === '...' ? (
+                      <span key={`ellipsis-${index}`} className={styles.ellipsis}>...</span>
+                    ) : (
+                      <button
+                        key={page}
+                        className={`${styles.pageButton} ${currentPage === page ? styles.active : ''}`}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                    )
+                  ))}
+                </div>
+                
+                <button
+                  className={`${styles.pageButton} ${currentPage === totalPages ? styles.disabled : ''}`}
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </main>
   );
 };

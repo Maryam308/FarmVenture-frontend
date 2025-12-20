@@ -1,50 +1,87 @@
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  gap: 12px;
 }
-  
-.container * {
-    margin: 0;
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid var(--accent-green);
+  flex-shrink: 0;
 }
-  
-.container div {
-    margin: 0 !important;
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
-  
-.container > img {
-    width: 30px;
-    height: 30px;
-    object-fit: cover;
-    margin-right: 12px;
-    border-radius: 50%;
-    background-color: var(--background);
+
+.username {
+  color: var(--text-primary);
+  line-height: 1.2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-  
-.container section > p {
-    opacity: 0.75;
-    line-height: 1;
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 2px;
+
+.dateInfo {
+  margin: 0;
 }
-  
-.container div p {
-    line-height: 0.8;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1px;
+
+.dateText {
+  color: var(--text-secondary);
+  line-height: 1.2;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.3px;
 }
-  
-.container section {
-    display: flex;
-    flex-direction: column;
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0.6rem;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .username {
+    font-size: 0.9rem;
+  }
+
+  .dateText {
+    font-size: 0.75rem;
+  }
 }
-  
-.container section img {
-    opacity: 0.5;
-    width: 14px;
-    height: 14px;
-    background: none;
-    margin: 0 2px 0 -2px;
+
+@media (max-width: 480px) {
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .username {
+    font-size: 0.85rem;
+  }
+
+  .dateText {
+    font-size: 0.7rem;
+  }
 }

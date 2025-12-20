@@ -1,26 +1,104 @@
 .container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    padding: 21px;
-    overflow: hidden;
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--content-bg);
+  z-index: 100;
 }
-  
-.container img {
-    width: 100%;
-    margin-bottom: 60px;
+
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
 }
-  
+
+.loadingIcon {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  margin-bottom: 2rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.loadingSpinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--accent-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 @media only screen and (max-height: 600px) {
-    .container img {
-      margin-bottom: 20px;
-    }
+  .loadingIcon {
+    max-width: 200px;
+    margin-bottom: 1rem;
+  }
+
+  .loadingSpinner {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 1rem;
+  }
+
+  .loadingText {
+    font-size: 1rem;
+  }
 }
-  
-@media only screen and (min-width: 500px) {
-    .container img {
-      max-width: 460px;
-    }
+
+@media only screen and (max-width: 500px) {
+  .loadingIcon {
+    max-width: 250px;
+  }
+
+  .loadingWrapper {
+    padding: 1rem;
+  }
 }

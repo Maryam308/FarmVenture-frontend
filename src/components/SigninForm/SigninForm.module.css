@@ -1,89 +1,233 @@
 .container {
-    height: 100%;
-    display: flex;
-    overflow: hidden;
-    align-items: center;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+  align-items: stretch;
 }
-  
-.container p {
-    margin: 0;
-    padding: 0px 0 10px;
+
+.farmBackground {
+  width: 50%;
+  height: 100vh;
+  background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600') center/cover;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-  
-.container img {
-    width: 65%;
-    max-width: 500px;
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-brown);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
 }
-  
-.container section {
-    width: 50%;
-    height: 100%;
-    display: flex;
-    padding: 28px 21px;
-    align-items: center;
+
+.welcomeTitle {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.welcomeText {
+  color: white;
+  font-size: 1.2rem;
+  margin: 0;
+  opacity: 0.95;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.formSection {
+  width: 50%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--content-bg);
+  overflow-y: auto;
+}
+
+.form {
+  width: 100%;
+  max-width: 450px;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+}
+
+.formTitle {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin: 0 0 2rem 0;
+  font-weight: 600;
+  text-align: center;
+}
+
+.errorMessage {
+  background: #fee;
+  color: #c00;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #fcc;
+  margin: 0 0 1.5rem 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+
+.formGroup label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 2px solid var(--border-color);
+  transition: border-color 0.3s;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.submitButton,
+.cancelButton {
+  width: 100%;
+  padding: 0.875rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submitButton {
+  background: var(--accent-green);
+  color: white;
+}
+
+.submitButton:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.cancelLink {
+  text-decoration: none;
+}
+
+.cancelButton {
+  background: white;
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+}
+
+.cancelButton:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+}
+
+.signupPrompt {
+  margin-top: 2rem;
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e8e8e8;
+}
+
+.signupPrompt p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.signupPrompt a {
+  color: var(--accent-green);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signupPrompt a:hover {
+  text-decoration: underline;
+}
+
+@media only screen and (max-width: 968px) {
+  .container {
     flex-direction: column;
-    justify-content: center;
-}
-  
-.container section:first-child {
-    background-color: #fdfeff;
-}
-  
-.container input {
-    margin: 7px 0px 14px 0px;
-}
-  
-.container input,
-button {
+  }
+
+  .farmBackground {
     width: 100%;
-    padding: 14px;
-    font-size: 14px;
-    border-radius: 5px;
-    border: 1px solid rgb(220, 220, 220);
-}
-  
-.container div {
+    height: 300px;
+  }
+
+  .welcomeTitle {
+    font-size: 2rem;
+  }
+
+  .welcomeText {
+    font-size: 1rem;
+  }
+
+  .formSection {
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 300px);
+  }
+
+  .form {
+    padding: 2rem;
+  }
 }
-  
-.container label {
-    font-weight: 600;
-    margin: 7px 0px 14px 0px;
-}
-  
-.container button {
-    color: white;
-    font-weight: 600;
-    background: #00a0df;
-    margin: 21px 0px 0px 0px;
-}
-  
-.container a {
-    border: none;
-    font-size: 14px;
-    background: none;
-    font-weight: 500;
-    margin-top: 14px;
-    text-align: center;
-    color: rgb(200, 200, 200);
-}
-  
-input:focus {
-    outline: none;
-    border: 1px solid #00a0df;
-}
-  
-@media only screen and (max-width: 912px) {
-    .container section {
-      width: 100%;
-      justify-content: flex-start;
-    }
-    .container section:first-child {
-      display: none;
-    }
-    .container form {
-      min-width: 100%;
-    }
+
+@media only screen and (max-width: 480px) {
+  .farmBackground {
+    height: 250px;
+  }
+
+  .welcomeTitle {
+    font-size: 1.6rem;
+  }
+
+  .welcomeText {
+    font-size: 0.9rem;
+  }
+
+  .form {
+    padding: 1.5rem;
+  }
+
+  .formTitle {
+    font-size: 1.6rem;
+  }
 }
