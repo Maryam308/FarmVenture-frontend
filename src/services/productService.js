@@ -22,7 +22,6 @@ const getAllProducts = async (params = {}) => {
     }
     return res.json();
   } catch (error) {
-    console.log('Error fetching products:', error);
     throw error;
   }
 };
@@ -54,7 +53,6 @@ const getAllProductsAdmin = async (showInactive = false) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error fetching admin products:', error);
     throw error;
   }
 };
@@ -76,7 +74,6 @@ const getProduct = async (productId) => {
     }
     return res.json();
   } catch (error) {
-    console.log('Error fetching product:', error);
     throw error;
   }
 };
@@ -114,7 +111,6 @@ const getAnyProduct = async (productId) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error fetching any product:', error);
     // Fall back to regular endpoint
     return await getProduct(productId);
   }
@@ -154,7 +150,6 @@ const uploadImage = async (file) => {
     return data.url;
     
   } catch (error) {
-    console.error('Upload error:', error);
     throw error;
   }
 };
@@ -186,7 +181,6 @@ const createProduct = async (productData) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error creating product:', error);
     throw error;
   }
 };
@@ -218,7 +212,6 @@ const updateProduct = async (productId, productData) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error updating product:', error);
     throw error;
   }
 };
@@ -251,7 +244,6 @@ const toggleProductActive = async (productId, isActive) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error toggling product status:', error);
     throw error;
   }
 };
@@ -281,7 +273,6 @@ const deleteProduct = async (productId) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error deleting product:', error);
     throw error;
   }
 };
@@ -290,7 +281,6 @@ const deleteProduct = async (productId) => {
 const getUserProducts = async (userId) => {
   // Check if userId is valid
   if (!userId || userId === 'undefined') {
-    console.error('Invalid user ID provided to getUserProducts:', userId);
     throw new Error('Invalid user ID');
   }
   
@@ -311,7 +301,6 @@ const getUserProducts = async (userId) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error fetching user products:', error);
     throw error;
   }
 };
@@ -320,7 +309,6 @@ const getUserProducts = async (userId) => {
 const getAllUserProducts = async (userId) => {
   // Check if userId is valid
   if (!userId || userId === 'undefined') {
-    console.error('Invalid user ID provided to getAllUserProducts:', userId);
     throw new Error('Invalid user ID');
   }
   
@@ -353,7 +341,6 @@ const getAllUserProducts = async (userId) => {
     
     return res.json();
   } catch (error) {
-    console.log('Error fetching all user products:', error);
     throw error;
   }
 };

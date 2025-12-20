@@ -6,7 +6,6 @@ const getFavorites = async (itemType = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token found for getFavorites');
       return [];
     }
     
@@ -19,12 +18,10 @@ const getFavorites = async (itemType = null) => {
     });
     
     if (!res.ok) {
-      console.log('Error response from getFavorites:', res.status, res.statusText);
       return [];
     }
     
     const data = await res.json();
-    console.log('Favorites fetched from API:', data);
     
     // Transform the data to match expected format
     const transformedData = data.map(fav => ({
@@ -37,10 +34,9 @@ const getFavorites = async (itemType = null) => {
       item: fav.item || null
     }));
     
-    console.log('Transformed favorites:', transformedData);
+
     return transformedData;
   } catch (error) {
-    console.log('Error fetching favorites:', error);
     return [];
   }
 };
@@ -50,7 +46,6 @@ const getFavoriteIds = async (itemType = null) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token for getFavoriteIds');
       return { products: [], activities: [] };
     }
     
@@ -63,15 +58,12 @@ const getFavoriteIds = async (itemType = null) => {
     });
     
     if (!res.ok) {
-      console.log('Error response from getFavoriteIds:', res.status, res.statusText);
       return { products: [], activities: [] };
     }
     
     const data = await res.json();
-    console.log('Favorite IDs fetched:', data);
     return data;
   } catch (error) {
-    console.log('Error fetching favorite IDs:', error);
     return { products: [], activities: [] };
   }
 };
@@ -109,10 +101,9 @@ const addFavorite = async (itemId, itemType) => {
     }
     
     const data = await res.json();
-    console.log('Added favorite:', data);
+
     return data;
   } catch (error) {
-    console.log('Error adding favorite:', error);
     throw error;
   }
 };
@@ -145,10 +136,8 @@ const removeFavorite = async (itemId, itemType) => {
     }
     
     const data = await res.json();
-    console.log('Removed favorite:', data);
     return data;
   } catch (error) {
-    console.log('Error removing favorite:', error);
     throw error;
   }
 };
@@ -158,7 +147,6 @@ const checkFavorite = async (itemId, itemType) => {
   try {
     const token = localStorage.getItem('token');
     if (!token) {
-      console.log('No token for checkFavorite');
       return { is_favorited: false };
     }
     
@@ -169,15 +157,12 @@ const checkFavorite = async (itemId, itemType) => {
     });
     
     if (!res.ok) {
-      console.log('Error response from checkFavorite:', res.status, res.statusText);
       return { is_favorited: false };
     }
     
     const data = await res.json();
-    console.log('Checked favorite:', data);
     return data;
   } catch (error) {
-    console.log('Error checking favorite:', error);
     return { is_favorited: false };
   }
 };
