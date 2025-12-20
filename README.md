@@ -1,6 +1,16 @@
 # FarmVenture-frontend
 
 ---
+![Homepage](src/assets/images/HomePage.png)
+![SignIn](src/assets/images/SignIn.png)
+![SignUp](src/assets/images/SignUp.png)
+![Browse Activity](src/assets/images/BrowseActivities.png)
+![Browse Product](src/assets/images/BrowseProducts.png)
+![Create Activity](src/assets/images/CreateActivity.png)
+![Create Product](src/assets/images/CreateProduct.png)
+
+
+---
 ## Project Management
 
 For detailed project tracking and task management, visit the deployment link, frontedn Repository and Trello board:
