@@ -12,25 +12,27 @@
 
 .aboutSection {
   background: white;
-  padding: 2.5rem;
-  border-radius: 8px;
+  padding: 3rem;
+  border-radius: 16px;
   margin-bottom: 3rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  text-align: center;
 }
 
 .aboutSection h2 {
   color: var(--text-primary);
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   margin-bottom: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .aboutSection p {
   color: var(--text-secondary);
   line-height: 1.8;
   font-size: 1.1rem;
-  opacity: 1;
-  text-align: left;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .featuresSection {
@@ -39,9 +41,10 @@
 
 .featuresSection h2 {
   color: var(--text-primary);
-  font-size: 1.8rem;
-  margin-bottom: 2rem;
-  font-weight: 600;
+  font-size: 2rem;
+  margin-bottom: 2.5rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 .featuresGrid {
@@ -52,20 +55,62 @@
 
 .featureCard {
   background: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .featureCard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(46, 204, 113, 0.15);
+  border-color: var(--accent-green);
 }
 
-.cardPlaceholder {
+.cardImageProducts {
   width: 100%;
-  height: 250px;
-  background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600') center/cover;
+}
+
+.cardImageActivities {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600') center/cover;
+}
+
+.cardImageStory {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600') center/cover;
+}
+
+.cardContent {
+  padding: 2rem;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.featureCard h3 {
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.featureCard p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1rem;
+  margin: 0;
 }
 
 .farmSection {
@@ -73,9 +118,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
   background: white;
-  padding: 2.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
   align-items: center;
 }
 
@@ -85,24 +131,64 @@
 
 .farmImagePlaceholder {
   width: 100%;
-  height: 300px;
-  background: url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800') center/cover;
-  border-radius: 8px;
+  height: 400px;
+  background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200') center/cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .farmTextContent h2 {
   color: var(--text-primary);
-  font-size: 1.8rem;
+  font-size: 2rem;
   margin-bottom: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .farmTextContent p {
   color: var(--text-secondary);
   line-height: 1.8;
   font-size: 1.1rem;
-  opacity: 1;
-  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.ctaButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.primaryButton {
+  background: var(--accent-green);
+  color: white;
+  flex: 1;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.secondaryButton {
+  background: white;
+  color: var(--accent-green);
+  border: 2px solid var(--accent-green);
+  flex: 1;
+}
+
+.secondaryButton:hover {
+  background: var(--accent-green);
+  color: white;
 }
 
 @media (max-width: 1024px) {
@@ -113,6 +199,10 @@
   .farmSection {
     grid-template-columns: 1fr;
   }
+
+  .farmImagePlaceholder {
+    height: 300px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -120,13 +210,42 @@
     padding: 2rem 1rem;
   }
 
+  .aboutSection {
+    padding: 2rem 1.5rem;
+  }
+
+  .aboutSection h2 {
+    font-size: 1.8rem;
+  }
+
+  .featuresSection h2 {
+    font-size: 1.6rem;
+  }
+
   .featuresGrid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 
-  .aboutSection,
   .farmSection {
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .farmTextContent h2 {
+    font-size: 1.6rem;
+  }
+
+  .ctaButtons {
+    flex-direction: column;
+  }
+
+  .farmImagePlaceholder {
+    height: 250px;
+  }
+
+  .cardImageProducts,
+  .cardImageActivities,
+  .cardImageStory {
+    height: 180px;
   }
 }
