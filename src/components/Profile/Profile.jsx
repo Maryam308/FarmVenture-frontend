@@ -10,7 +10,7 @@ const Profile = ({ user }) => {
   const [activeTab, setActiveTab] = useState(
     user?.role === "admin" ? "bookings" : "favorites"
   );
-  
+
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -542,7 +542,8 @@ const Profile = ({ user }) => {
                             Total:
                           </span>
                           <span className={styles.totalPrice}>
-                            BHD {(
+                            BHD{" "}
+                            {(
                               (booking.activity?.price || 0) *
                               booking.tickets_number
                             ).toFixed(2)}
@@ -608,7 +609,22 @@ const Profile = ({ user }) => {
                     </div>
                   ) : favoriteProducts.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <div className={styles.emptyIcon}>❤️</div>
+                      <div className={styles.emptyIcon}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-heart-icon lucide-heart"
+                        >
+                          <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                        </svg>
+                      </div>
                       <p>You haven't favorited any products yet.</p>
                       <Link to="/products" className={styles.browseButton}>
                         Browse Products
@@ -624,9 +640,9 @@ const Profile = ({ user }) => {
                         >
                           <div className={styles.imageContainer}>
                             {product.image_url ? (
-                              <img 
-                                src={product.image_url} 
-                                alt={product.name} 
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
                                 className={styles.productImage}
                               />
                             ) : (
@@ -637,12 +653,8 @@ const Profile = ({ user }) => {
                             )}
                           </div>
                           <div className={styles.cardInfo}>
-                            <span className={styles.typeBadge}>
-                              Product
-                            </span>
-                            <h3>
-                              {product.name || "Untitled Product"}
-                            </h3>
+                            <span className={styles.typeBadge}>Product</span>
+                            <h3>{product.name || "Untitled Product"}</h3>
                             <p className={styles.price}>
                               BHD {product.price?.toFixed(2) || "0.00"}
                             </p>
