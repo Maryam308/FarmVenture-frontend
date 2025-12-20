@@ -10,10 +10,8 @@ const Profile = ({ user }) => {
   const [activeTab, setActiveTab] = useState(
     user?.role === "admin" ? "bookings" : "favorites"
   );
-
-  const [favoriteFilter, setFavoriteFilter] = useState("all"); // 'all', 'products', 'activities'
+  
   const [favoriteProducts, setFavoriteProducts] = useState([]);
-  const [favoriteActivities, setFavoriteActivities] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +39,6 @@ const Profile = ({ user }) => {
         } else if (user.role === "customer") {
           const allFavorites = await favoriteService.getFavorites();
           const products = [];
-          const activities = [];
 
           allFavorites.forEach((fav) => {
             if (fav.item_type === "product" && fav.item) {
@@ -50,17 +47,10 @@ const Profile = ({ user }) => {
                 favorite_id: fav.id,
                 favorited_at: fav.created_at,
               });
-            } else if (fav.item_type === "activity" && fav.item) {
-              activities.push({
-                ...fav.item,
-                favorite_id: fav.id,
-                favorited_at: fav.created_at,
-              });
             }
           });
 
           setFavoriteProducts(products);
-          setFavoriteActivities(activities);
           await fetchBookings();
         }
       } catch (error) {
@@ -98,7 +88,6 @@ const Profile = ({ user }) => {
       try {
         const allFavorites = await favoriteService.getFavorites();
         const products = [];
-        const activities = [];
 
         allFavorites.forEach((fav) => {
           if (fav.item_type === "product" && fav.item) {
@@ -107,17 +96,10 @@ const Profile = ({ user }) => {
               favorite_id: fav.id,
               favorited_at: fav.created_at,
             });
-          } else if (fav.item_type === "activity" && fav.item) {
-            activities.push({
-              ...fav.item,
-              favorite_id: fav.id,
-              favorited_at: fav.created_at,
-            });
           }
         });
 
         setFavoriteProducts(products);
-        setFavoriteActivities(activities);
       } catch (error) {}
     };
 
@@ -150,12 +132,6 @@ const Profile = ({ user }) => {
     if (bookingStatusFilter === "all") return true;
     return booking.status === bookingStatusFilter;
   });
-
-  const getFilteredFavorites = () => {
-    if (favoriteFilter === "products") return favoriteProducts;
-    if (favoriteFilter === "activities") return favoriteActivities;
-    return [...favoriteProducts, ...favoriteActivities];
-  };
 
   const handleCancelBookingClick = (bookingId) => {
     setSelectedBookingId(bookingId);
@@ -212,8 +188,6 @@ const Profile = ({ user }) => {
       </main>
     );
   }
-
-  const filteredFavorites = getFilteredFavorites();
 
   return (
     <main className={styles.container}>
@@ -568,8 +542,7 @@ const Profile = ({ user }) => {
                             Total:
                           </span>
                           <span className={styles.totalPrice}>
-                            BHD
-                            {(
+                            BHD {(
                               (booking.activity?.price || 0) *
                               booking.tickets_number
                             ).toFixed(2)}
@@ -603,15 +576,7 @@ const Profile = ({ user }) => {
           /* CUSTOMER VIEW - Profile with Tabs */
           <>
             <div className={styles.profileCard}>
-              <h2>Customer Profile</h2>
-              <div className={styles.profileInfo}>
-                <p>
-                  <strong>Username:</strong> {user.username}
-                </p>
-                <p>
-                  <strong>Email:</strong> {user.email}
-                </p>
-              </div>
+              <h2>{user.role === "customer" ? "Customer" : "User"} Profile</h2>
             </div>
 
             <div className={styles.tabSection}>
@@ -636,101 +601,54 @@ const Profile = ({ user }) => {
 
               {activeTab === "favorites" && (
                 <div className={styles.tabContent}>
-                  {/* Favorite Filter */}
-                  <div className={styles.filterSection}>
-                    <label
-                      htmlFor="favoriteFilter"
-                      className={styles.filterLabel}
-                    >
-                      Show:
-                    </label>
-                    <select
-                      id="favoriteFilter"
-                      value={favoriteFilter}
-                      onChange={(e) => setFavoriteFilter(e.target.value)}
-                      className={styles.filterSelect}
-                    >
-                      <option value="all">
-                        All Favorites (
-                        {favoriteProducts.length + favoriteActivities.length})
-                      </option>
-                      <option value="products">
-                        Products Only ({favoriteProducts.length})
-                      </option>
-                      <option value="activities">
-                        Activities Only ({favoriteActivities.length})
-                      </option>
-                    </select>
-                  </div>
-
                   {loading ? (
                     <div className={styles.loadingState}>
                       <div className={styles.spinner}></div>
                       <p>Loading favorites...</p>
                     </div>
-                  ) : filteredFavorites.length === 0 ? (
+                  ) : favoriteProducts.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <div className={styles.emptyIcon}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="lucide lucide-heart-icon lucide-heart"
-                        >
-                          <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
-                        </svg>
-                      </div>
-                      <p>
-                        {favoriteFilter === "all"
-                          ? "You haven't favorited anything yet."
-                          : favoriteFilter === "products"
-                          ? "You haven't favorited any products yet."
-                          : "You haven't favorited any activities yet."}
-                      </p>
+                      <div className={styles.emptyIcon}>❤️</div>
+                      <p>You haven't favorited any products yet.</p>
                       <Link to="/products" className={styles.browseButton}>
                         Browse Products
                       </Link>
                     </div>
                   ) : (
                     <div className={styles.favoritesGrid}>
-                      {filteredFavorites.map((item) => {
-                        const isProduct = item.name !== undefined;
-                        const itemType = isProduct ? "product" : "activity";
-
-                        return (
-                          <Link
-                            key={`${itemType}-${item.id}`}
-                            to={
-                              isProduct
-                                ? `/products/${item.id}`
-                                : `/activities/${item.id}`
-                            }
-                            className={styles.favoriteCard}
-                          >
-                            <div className={styles.cardPlaceholder}></div>
-                            <div className={styles.cardInfo}>
-                              <span className={styles.typeBadge}>
-                                {isProduct ? "Product" : "Activity"}
-                              </span>
-                              <h3>
-                                {isProduct
-                                  ? item.name || "Untitled Product"
-                                  : item.title || "Untitled Activity"}
-                              </h3>
-                              <p className={styles.price}>
-                                ${item.price?.toFixed(2) || "0.00"}
-                                {!isProduct && " /person"}
-                              </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
+                      {favoriteProducts.map((product) => (
+                        <Link
+                          key={`product-${product.id}`}
+                          to={`/products/${product.id}`}
+                          className={styles.favoriteCard}
+                        >
+                          <div className={styles.imageContainer}>
+                            {product.image_url ? (
+                              <img 
+                                src={product.image_url} 
+                                alt={product.name} 
+                                className={styles.productImage}
+                              />
+                            ) : (
+                              <div className={styles.cardPlaceholder}>
+                                <span>🌱</span>
+                                <p>No Image</p>
+                              </div>
+                            )}
+                          </div>
+                          <div className={styles.cardInfo}>
+                            <span className={styles.typeBadge}>
+                              Product
+                            </span>
+                            <h3>
+                              {product.name || "Untitled Product"}
+                            </h3>
+                            <p className={styles.price}>
+                              BHD {product.price?.toFixed(2) || "0.00"}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </div>
