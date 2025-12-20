@@ -66,16 +66,24 @@ Password: admin
 > These assets are used for educational purposes and UI/UX inspiration only. All rights belong to the original creators.
 
 ---
-
 ## 🧪 Technologies Used
-- **JavaScript** - Programming language
-- **React** - Frontend framework
-- **Vite** - Build tool and development server
-- **React Router DOM** - Client-side routing
+
+### Backend
+- **Python** - Backend programming language
+- **FastAPI** - Modern web framework for building APIs
+- **PostgreSQL** - Relational database for data persistence
+- **SQLAlchemy** - Python SQL toolkit and ORM for database operations
+- **JWT (JSON Web Tokens)** - Authentication and authorization system
+
+### Frontend
+- **React** - Frontend library for building user interfaces
+- **Vite** - Fast build tool and development server
+- **React Router DOM** - Client-side routing for navigation
+- **Context API** - Built-in React state management
+
+### Services & Tools
+- **Cloudinary** - Image and media management platform
 - **CSS** - Styling and layout
-- **Context API** - State management
-- **Cloudinary** - Image and media management
-  
 ---
 
 ## 🎯 Next Steps / Future Enhancements
