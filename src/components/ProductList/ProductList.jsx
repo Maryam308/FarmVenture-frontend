@@ -712,4 +712,4 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   );
 };
 
-export default ProductList;
+export default ProductList; 
