@@ -63,16 +63,92 @@ const BookingDetails = ({ user }) => {
       upcoming: {
         text: "Upcoming",
         className: styles.statusUpcoming,
-        icon: "📅",
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-calendar-icon lucide-calendar"
+          >
+            <path d="M8 2v4" />
+            <path d="M16 2v4" />
+            <rect width="18" height="18" x="3" y="4" rx="2" />
+            <path d="M3 10h18" />
+          </svg>
+        ),
       },
-      today: { text: "Today", className: styles.statusToday, icon: "🎯" },
-      past: { text: "Past", className: styles.statusPast, icon: "✅" },
+      today: {
+        text: "Today",
+        className: styles.statusToday,
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-goal-icon lucide-goal"
+          >
+            <path d="M12 13V2l8 4-8 4" />
+            <path d="M20.561 10.222a9 9 0 1 1-12.55-5.29" />
+            <path d="M8.002 9.997a5 5 0 1 0 8.9 2.02" />
+          </svg>
+        ),
+      },
+      past: {
+        text: "Past",
+        className: styles.statusPast,
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-square-check-icon lucide-square-check"
+          >
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+        ),
+      },
     };
 
     const statusInfo = statusMap[status] || {
       text: status,
       className: styles.statusDefault,
-      icon: "❓",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-circle-question-mark-icon lucide-circle-question-mark"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+          <path d="M12 17h.01" />
+        </svg>
+      ),
     };
 
     return (
@@ -225,7 +301,25 @@ const BookingDetails = ({ user }) => {
 
                 <div className={styles.detailsGrid}>
                   <div className={styles.detailItem}>
-                    <span className={styles.icon}>📅</span>
+                    <span className={styles.icon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-calendar-icon lucide-calendar"
+                      >
+                        <path d="M8 2v4" />
+                        <path d="M16 2v4" />
+                        <rect width="18" height="18" x="3" y="4" rx="2" />
+                        <path d="M3 10h18" />
+                      </svg>
+                    </span>
                     <div>
                       <strong>Date</strong>
                       <p>
@@ -237,7 +331,23 @@ const BookingDetails = ({ user }) => {
                   </div>
 
                   <div className={styles.detailItem}>
-                    <span className={styles.icon}>⏰</span>
+                    <span className={styles.icon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-clock-icon lucide-clock"
+                      >
+                        <path d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                    </span>
                     <div>
                       <strong>Time</strong>
                       <p>
@@ -252,7 +362,23 @@ const BookingDetails = ({ user }) => {
                   </div>
 
                   <div className={styles.detailItem}>
-                    <span className={styles.icon}>📍</span>
+                    <span className={styles.icon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-map-pin-icon lucide-map-pin"
+                      >
+                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </span>
                     <div>
                       <strong>Location</strong>
                       <p>{booking.activity.location}</p>
@@ -260,7 +386,23 @@ const BookingDetails = ({ user }) => {
                   </div>
 
                   <div className={styles.detailItem}>
-                    <span className={styles.icon}>⏱️</span>
+                    <span className={styles.icon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-clock-icon lucide-clock"
+                      >
+                        <path d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                    </span>
                     <div>
                       <strong>Duration</strong>
                       <p>{booking.activity.duration_minutes} minutes</p>
@@ -330,9 +472,7 @@ const BookingDetails = ({ user }) => {
               <ul>
                 <li>Payment will be collected on-site</li>
                 <li>Please arrive 15 minutes before the scheduled time</li>
-                <li>
-                  Cancellations must be made at least 24 hours in advance
-                </li>
+                <li>Cancellations must be made at least 24 hours in advance</li>
                 <li>No refunds for no-shows</li>
               </ul>
             </div>

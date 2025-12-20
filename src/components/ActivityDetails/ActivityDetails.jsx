@@ -15,7 +15,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   const [loading, setLoading] = useState(true);
   const [isUpcoming, setIsUpcoming] = useState(true);
   const [hasBooked, setHasBooked] = useState(false);
-  
+
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -28,33 +28,39 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+    return remainingMinutes > 0
+      ? `${hours}h ${remainingMinutes}m`
+      : `${hours}h`;
   };
 
   const formatDateTime = (dateTime) => {
     // Parse UTC datetime string directly without timezone conversion
-    const dateTimeParts = dateTime.split('T');
+    const dateTimeParts = dateTime.split("T");
     const datePart = dateTimeParts[0]; // YYYY-MM-DD
-    const timePart = dateTimeParts[1] ? dateTimeParts[1].split(':') : ['00', '00'];
-    
+    const timePart = dateTimeParts[1]
+      ? dateTimeParts[1].split(":")
+      : ["00", "00"];
+
     // Create date object from parts for formatting
-    const [year, month, day] = datePart.split('-');
+    const [year, month, day] = datePart.split("-");
     const date = new Date(year, month - 1, day);
-    
+
     const dateStr = date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-    
+
     // Format time from the parsed parts
     const hour = parseInt(timePart[0]);
     const minute = timePart[1];
-    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
-    const timeStr = `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
-    
+    const timeStr = `${displayHour
+      .toString()
+      .padStart(2, "0")}:${minute} ${ampm}`;
+
     return { dateStr, timeStr };
   };
 
@@ -134,7 +140,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   }, [user, activityId]);
 
   if (loading) return <Loading />;
-  
+
   if (!activity) {
     return (
       <main className={styles.container}>
@@ -202,7 +208,25 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                 />
               ) : (
                 <div className={styles.noImage}>
-                  <span>📅</span>
+                  <span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      class="lucide lucide-calendar-icon lucide-calendar"
+                    >
+                      <path d="M8 2v4" />
+                      <path d="M16 2v4" />
+                      <rect width="18" height="18" x="3" y="4" rx="2" />
+                      <path d="M3 10h18" />
+                    </svg>
+                  </span>
                   <p>No Image Available</p>
                 </div>
               )}
@@ -215,7 +239,9 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   <span className={styles.category}>
                     {activity.category
                       .split("_")
-                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                      .map(
+                        (word) => word.charAt(0).toUpperCase() + word.slice(1)
+                      )
                       .join(" ")}
                   </span>
                 )}
@@ -237,7 +263,25 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                 <h3>Activity Information</h3>
                 <div className={styles.infoGrid}>
                   <div className={styles.infoItem}>
-                    <div className={styles.infoIcon}>📅</div>
+                    <div className={styles.infoIcon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-calendar-icon lucide-calendar"
+                      >
+                        <path d="M8 2v4" />
+                        <path d="M16 2v4" />
+                        <rect width="18" height="18" x="3" y="4" rx="2" />
+                        <path d="M3 10h18" />
+                      </svg>
+                    </div>
                     <div>
                       <strong>Date:</strong>
                       <span>{dateTime.dateStr}</span>
@@ -245,7 +289,23 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </div>
 
                   <div className={styles.infoItem}>
-                    <div className={styles.infoIcon}>⏰</div>
+                    <div className={styles.infoIcon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-clock-icon lucide-clock"
+                      >
+                        <path d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                    </div>
                     <div>
                       <strong>Time:</strong>
                       <span>{dateTime.timeStr}</span>
@@ -253,7 +313,23 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </div>
 
                   <div className={styles.infoItem}>
-                    <div className={styles.infoIcon}>⏱️</div>
+                    <div className={styles.infoIcon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-clock-icon lucide-clock"
+                      >
+                        <path d="M12 6v6l4 2" />
+                        <circle cx="12" cy="12" r="10" />
+                      </svg>
+                    </div>
                     <div>
                       <strong>Duration:</strong>
                       <span>{formatDuration(activity.duration_minutes)}</span>
@@ -261,11 +337,30 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </div>
 
                   <div className={styles.infoItem}>
-                    <div className={styles.infoIcon}>👥</div>
+                    <div className={styles.infoIcon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-users-icon lucide-users"
+                      >
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <circle cx="9" cy="7" r="4" />
+                      </svg>
+                    </div>
                     <div>
                       <strong>Capacity:</strong>
                       <span>
-                        {activity.current_capacity} of {activity.max_capacity} booked
+                        {activity.current_capacity} of {activity.max_capacity}{" "}
+                        booked
                         <span className={styles.spotsLeft}>
                           ({spotsAvailable} spots left)
                         </span>
@@ -274,7 +369,23 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                   </div>
 
                   <div className={styles.infoItem}>
-                    <div className={styles.infoIcon}>📍</div>
+                    <div className={styles.infoIcon}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-map-pin-icon lucide-map-pin"
+                      >
+                        <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </div>
                     <div>
                       <strong>Location:</strong>
                       <span>{activity.location || "On-site at the farm"}</span>
@@ -289,10 +400,16 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
 
               {isAdmin && (
                 <div className={styles.actionButtons}>
-                  <Link to={`/activities/${activityId}/edit`} className={styles.editButton}>
+                  <Link
+                    to={`/activities/${activityId}/edit`}
+                    className={styles.editButton}
+                  >
                     Edit Activity
                   </Link>
-                  <button onClick={handleDeleteClick} className={styles.deleteButton}>
+                  <button
+                    onClick={handleDeleteClick}
+                    className={styles.deleteButton}
+                  >
                     Delete Activity
                   </button>
                 </div>
@@ -311,7 +428,10 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
                     </button>
                   ) : user ? (
                     <>
-                      <Link to={`/activities/${activityId}/book`} className={styles.bookButton}>
+                      <Link
+                        to={`/activities/${activityId}/book`}
+                        className={styles.bookButton}
+                      >
                         Book Now
                       </Link>
                       <p className={styles.bookingNote}>

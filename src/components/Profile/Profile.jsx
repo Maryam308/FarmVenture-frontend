@@ -10,7 +10,7 @@ const Profile = ({ user }) => {
   const [activeTab, setActiveTab] = useState(
     user?.role === "admin" ? "bookings" : "favorites"
   );
-  
+
   const [favoriteFilter, setFavoriteFilter] = useState("all"); // 'all', 'products', 'activities'
   const [favoriteProducts, setFavoriteProducts] = useState([]);
   const [favoriteActivities, setFavoriteActivities] = useState([]);
@@ -18,7 +18,7 @@ const Profile = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bookingStatusFilter, setBookingStatusFilter] = useState("all");
-  
+
   const [showCancelPopup, setShowCancelPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -266,7 +266,25 @@ const Profile = ({ user }) => {
 
             <div className={styles.statsCards}>
               <div className={styles.statCard}>
-                <div className={styles.statIcon}>📊</div>
+                <div className={styles.statIcon}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chart-column-decreasing-icon lucide-chart-column-decreasing"
+                  >
+                    <path d="M13 17V9" />
+                    <path d="M18 17v-3" />
+                    <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+                    <path d="M8 17V5" />
+                  </svg>
+                </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
                     {(bookings || []).length}
@@ -275,25 +293,81 @@ const Profile = ({ user }) => {
                 </div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statIcon}>📅</div>
+                <div className={styles.statIcon}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-calendar-icon lucide-calendar"
+                  >
+                    <path d="M8 2v4" />
+                    <path d="M16 2v4" />
+                    <rect width="18" height="18" x="3" y="4" rx="2" />
+                    <path d="M3 10h18" />
+                  </svg>
+                </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
-                    {(bookings || []).filter((b) => b.status === "upcoming").length}
+                    {
+                      (bookings || []).filter((b) => b.status === "upcoming")
+                        .length
+                    }
                   </span>
                   <span className={styles.statLabel}>Upcoming</span>
                 </div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statIcon}>🎯</div>
+                <div className={styles.statIcon}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-goal-icon lucide-goal"
+                  >
+                    <path d="M12 13V2l8 4-8 4" />
+                    <path d="M20.561 10.222a9 9 0 1 1-12.55-5.29" />
+                    <path d="M8.002 9.997a5 5 0 1 0 8.9 2.02" />
+                  </svg>
+                </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
-                    {(bookings || []).filter((b) => b.status === "today").length}
+                    {
+                      (bookings || []).filter((b) => b.status === "today")
+                        .length
+                    }
                   </span>
                   <span className={styles.statLabel}>Today</span>
                 </div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statIcon}>✅</div>
+                <div className={styles.statIcon}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-check-icon lucide-check"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </div>
                 <div className={styles.statInfo}>
                   <span className={styles.statValue}>
                     {(bookings || []).filter((b) => b.status === "past").length}
@@ -304,7 +378,10 @@ const Profile = ({ user }) => {
             </div>
 
             <div className={styles.filterSection}>
-              <label htmlFor="bookingStatusFilter" className={styles.filterLabel}>
+              <label
+                htmlFor="bookingStatusFilter"
+                className={styles.filterLabel}
+              >
                 Filter by Status:
               </label>
               <select
@@ -327,7 +404,25 @@ const Profile = ({ user }) => {
               </div>
             ) : filteredBookings.length === 0 ? (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>🎫</div>
+                <div className={styles.emptyIcon}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-ticket-icon lucide-ticket"
+                  >
+                    <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                    <path d="M13 5v2" />
+                    <path d="M13 17v2" />
+                    <path d="M13 11v2" />
+                  </svg>
+                </div>
                 <p>
                   {bookingStatusFilter === "all"
                     ? "No bookings found in the system."
@@ -346,7 +441,22 @@ const Profile = ({ user }) => {
                     </div>
 
                     <div className={styles.customerBadge}>
-                      👤 {booking.user?.username || "Unknown Customer"}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="lucide lucide-user-icon lucide-user"
+                      >
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>{" "}
+                      {booking.user?.username || "Unknown Customer"}
                     </div>
 
                     <div className={styles.cardContent}>
@@ -354,7 +464,26 @@ const Profile = ({ user }) => {
 
                       <div className={styles.bookingDetails}>
                         <div className={styles.detailRow}>
-                          <span>📅 Date:</span>
+                          <span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-calendar-icon lucide-calendar"
+                            >
+                              <path d="M8 2v4" />
+                              <path d="M16 2v4" />
+                              <rect width="18" height="18" x="3" y="4" rx="2" />
+                              <path d="M3 10h18" />
+                            </svg>{" "}
+                            Date:
+                          </span>
                           <span>
                             {booking.activity?.date_time
                               ? new Date(
@@ -364,7 +493,24 @@ const Profile = ({ user }) => {
                           </span>
                         </div>
                         <div className={styles.detailRow}>
-                          <span>🕐 Time:</span>
+                          <span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-clock-icon lucide-clock"
+                            >
+                              <path d="M12 6v6l4 2" />
+                              <circle cx="12" cy="12" r="10" />
+                            </svg>{" "}
+                            Time:
+                          </span>
                           <span>
                             {booking.activity?.date_time
                               ? new Date(
@@ -377,11 +523,50 @@ const Profile = ({ user }) => {
                           </span>
                         </div>
                         <div className={styles.detailRow}>
-                          <span>🎫 Tickets:</span>
+                          <span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-ticket-icon lucide-ticket"
+                            >
+                              <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                              <path d="M13 5v2" />
+                              <path d="M13 17v2" />
+                              <path d="M13 11v2" />
+                            </svg>{" "}
+                            Tickets:
+                          </span>
                           <span>{booking.tickets_number}</span>
                         </div>
                         <div className={styles.detailRow}>
-                          <span>💰 Total:</span>
+                          <span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="lucide lucide-hand-coins-icon lucide-hand-coins"
+                            >
+                              <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17" />
+                              <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+                              <path d="m2 16 6 6" />
+                              <circle cx="16" cy="9" r="2.9" />
+                              <circle cx="6" cy="5" r="3" />
+                            </svg>{" "}
+                            Total:
+                          </span>
                           <span className={styles.totalPrice}>
                             BHD
                             {(
@@ -453,7 +638,10 @@ const Profile = ({ user }) => {
                 <div className={styles.tabContent}>
                   {/* Favorite Filter */}
                   <div className={styles.filterSection}>
-                    <label htmlFor="favoriteFilter" className={styles.filterLabel}>
+                    <label
+                      htmlFor="favoriteFilter"
+                      className={styles.filterLabel}
+                    >
                       Show:
                     </label>
                     <select
@@ -462,9 +650,16 @@ const Profile = ({ user }) => {
                       onChange={(e) => setFavoriteFilter(e.target.value)}
                       className={styles.filterSelect}
                     >
-                      <option value="all">All Favorites ({favoriteProducts.length + favoriteActivities.length})</option>
-                      <option value="products">Products Only ({favoriteProducts.length})</option>
-                      <option value="activities">Activities Only ({favoriteActivities.length})</option>
+                      <option value="all">
+                        All Favorites (
+                        {favoriteProducts.length + favoriteActivities.length})
+                      </option>
+                      <option value="products">
+                        Products Only ({favoriteProducts.length})
+                      </option>
+                      <option value="activities">
+                        Activities Only ({favoriteActivities.length})
+                      </option>
                     </select>
                   </div>
 
@@ -475,7 +670,22 @@ const Profile = ({ user }) => {
                     </div>
                   ) : filteredFavorites.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <div className={styles.emptyIcon}>❤️</div>
+                      <div className={styles.emptyIcon}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-heart-icon lucide-heart"
+                        >
+                          <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" />
+                        </svg>
+                      </div>
                       <p>
                         {favoriteFilter === "all"
                           ? "You haven't favorited anything yet."
@@ -529,7 +739,10 @@ const Profile = ({ user }) => {
               {activeTab === "bookings" && (
                 <div className={styles.tabContent}>
                   <div className={styles.filterSection}>
-                    <label htmlFor="bookingStatusFilter" className={styles.filterLabel}>
+                    <label
+                      htmlFor="bookingStatusFilter"
+                      className={styles.filterLabel}
+                    >
                       Filter by Status:
                     </label>
                     <select
@@ -552,7 +765,25 @@ const Profile = ({ user }) => {
                     </div>
                   ) : filteredBookings.length === 0 ? (
                     <div className={styles.emptyState}>
-                      <div className={styles.emptyIcon}>🎫</div>
+                      <div className={styles.emptyIcon}>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          class="lucide lucide-ticket-icon lucide-ticket"
+                        >
+                          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                          <path d="M13 5v2" />
+                          <path d="M13 17v2" />
+                          <path d="M13 11v2" />
+                        </svg>
+                      </div>
                       <p>You haven't booked any activities yet.</p>
                       <Link to="/activities" className={styles.browseButton}>
                         Browse Activities

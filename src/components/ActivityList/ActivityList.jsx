@@ -113,12 +113,12 @@ const ActivityList = ({
 
   const formatDate = (dateTime) => {
     // Parse UTC datetime string directly without timezone conversion
-    const dateTimeParts = dateTime.split('T');
+    const dateTimeParts = dateTime.split("T");
     const datePart = dateTimeParts[0]; // YYYY-MM-DD
-    
-    const [year, month, day] = datePart.split('-');
+
+    const [year, month, day] = datePart.split("-");
     const date = new Date(year, month - 1, day);
-    
+
     return date.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
@@ -129,15 +129,17 @@ const ActivityList = ({
 
   const formatTime = (dateTime) => {
     // Parse UTC datetime string directly without timezone conversion
-    const dateTimeParts = dateTime.split('T');
-    const timePart = dateTimeParts[1] ? dateTimeParts[1].split(':') : ['00', '00'];
-    
+    const dateTimeParts = dateTime.split("T");
+    const timePart = dateTimeParts[1]
+      ? dateTimeParts[1].split(":")
+      : ["00", "00"];
+
     const hour = parseInt(timePart[0]);
     const minute = timePart[1];
-    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const ampm = hour >= 12 ? "PM" : "AM";
     const displayHour = hour % 12 || 12;
-    
-    return `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
+
+    return `${displayHour.toString().padStart(2, "0")}:${minute} ${ampm}`;
   };
 
   const handleDeleteClick = (activityId, e) => {
@@ -335,7 +337,9 @@ const ActivityList = ({
           </div>
 
           <div className={styles.stats}>
-            <span className={styles.statUpcoming}>{upcomingCount} Upcoming</span>
+            <span className={styles.statUpcoming}>
+              {upcomingCount} Upcoming
+            </span>
             <span className={styles.statPast}>{pastCount} Past</span>
             <span className={styles.statTotal}>{totalCount} Total</span>
             {searchQuery && (
@@ -411,7 +415,25 @@ const ActivityList = ({
 
         {filteredActivities.length === 0 ? (
           <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>📅</div>
+            <div className={styles.emptyIcon}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-calendar-icon lucide-calendar"
+              >
+                <path d="M8 2v4" />
+                <path d="M16 2v4" />
+                <rect width="18" height="18" x="3" y="4" rx="2" />
+                <path d="M3 10h18" />
+              </svg>
+            </div>
             <p>
               {searchQuery
                 ? `No activities found matching "${searchQuery}"`
@@ -440,7 +462,7 @@ const ActivityList = ({
               )}
               {user?.role === "admin" && (
                 <Link to="/activities/new" className={styles.addButton}>
-                  ➕ Create Your First Activity
+                  + Create Your First Activity
                 </Link>
               )}
             </div>
@@ -459,8 +481,10 @@ const ActivityList = ({
               <div className={styles.sortIndicator}>
                 {sortBy === "date" && "Sorted by: Date (Earliest First)"}
                 {sortBy === "date-desc" && "Sorted by: Date (Latest First)"}
-                {sortBy === "price-low-high" && "Sorted by: Price (Low to High)"}
-                {sortBy === "price-high-low" && "Sorted by: Price (High to Low)"}
+                {sortBy === "price-low-high" &&
+                  "Sorted by: Price (Low to High)"}
+                {sortBy === "price-high-low" &&
+                  "Sorted by: Price (High to Low)"}
                 {sortBy === "capacity" && "Sorted by: Available Spots"}
                 {sortBy === "duration" && "Sorted by: Duration"}
               </div>
@@ -496,7 +520,9 @@ const ActivityList = ({
                             )}
 
                             {isUpcoming ? (
-                              <div className={styles.upcomingBadge}>UPCOMING</div>
+                              <div className={styles.upcomingBadge}>
+                                UPCOMING
+                              </div>
                             ) : (
                               <div className={styles.pastBadge}>PAST</div>
                             )}
@@ -506,7 +532,9 @@ const ActivityList = ({
                             )}
 
                             {isSoldOut && (
-                              <div className={styles.soldOutBadge}>SOLD OUT</div>
+                              <div className={styles.soldOutBadge}>
+                                SOLD OUT
+                              </div>
                             )}
                           </div>
 
@@ -636,7 +664,10 @@ const ActivityList = ({
                 <div className={styles.pageNumbers}>
                   {getPageNumbers().map((page, index) =>
                     page === "..." ? (
-                      <span key={`ellipsis-${index}`} className={styles.ellipsis}>
+                      <span
+                        key={`ellipsis-${index}`}
+                        className={styles.ellipsis}
+                      >
                         ...
                       </span>
                     ) : (
