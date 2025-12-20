@@ -294,8 +294,13 @@
 }
 
 @keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.2); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
 }
 
 .favoriteBtn:disabled {
@@ -377,7 +382,7 @@
   font-size: 0.95rem;
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+
   -webkit-box-orient: vertical;
   overflow: hidden;
   opacity: 1;
