@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as bookingService from "../../services/bookingService";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./BookingDetails.module.css";
 import PopupAlert from "../PopupAlert/PopupAlert";
 
@@ -104,11 +105,7 @@ const BookingDetails = ({ user }) => {
   if (loading) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
@@ -122,11 +119,7 @@ const BookingDetails = ({ user }) => {
   if (error || !booking) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.error}>
             <h2>Booking Not Found</h2>
@@ -182,11 +175,7 @@ const BookingDetails = ({ user }) => {
         showCancel={false}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <div className={styles.bookingDetailsWrapper}>

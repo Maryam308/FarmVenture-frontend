@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';  
 import { useParams, useNavigate } from 'react-router-dom';
+import HeroSection from '../HeroSection/HeroSection';
 import * as productService from '../../services/productService';
 import styles from './ProductForm.module.css';
 import PopupAlert from '../PopupAlert/PopupAlert';
@@ -192,11 +193,7 @@ const ProductForm = ({ handleAddProduct, handleUpdateProduct }) => {
         autoCloseTime={2000}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <form onSubmit={handleSubmit} className={styles.form}>

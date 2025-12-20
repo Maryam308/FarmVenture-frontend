@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as bookingService from "../../services/bookingService";
 import * as activityService from "../../services/activitiesService";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./BookingForm.module.css";
 import PopupAlert from "../PopupAlert/PopupAlert";
 
@@ -118,11 +119,7 @@ const BookingForm = ({ user }) => {
   if (loading) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
@@ -136,11 +133,7 @@ const BookingForm = ({ user }) => {
   if (!activity) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.error}>
             <h2>Activity Not Found</h2>
@@ -187,11 +180,7 @@ const BookingForm = ({ user }) => {
         autoCloseTime={2000}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <div className={styles.bookingWrapper}>

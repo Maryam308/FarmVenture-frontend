@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import * as bookingService from "../../services/bookingService";
 import * as favoriteService from "../../services/favoriteService";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./Profile.module.css";
 import PopupAlert from "../PopupAlert/PopupAlert";
 
@@ -198,11 +199,7 @@ const Profile = ({ user }) => {
   if (!user) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.errorState}>
             <h2>Please Sign In</h2>
@@ -254,11 +251,7 @@ const Profile = ({ user }) => {
         showCancel={false}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         {/* ADMIN VIEW - Bookings Management Only */}

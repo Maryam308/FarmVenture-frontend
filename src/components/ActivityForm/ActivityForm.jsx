@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as activityService from "../../services/activitiesService";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./ActivityForm.module.css";
 import PopupAlert from "../PopupAlert/PopupAlert";
 
@@ -166,13 +167,15 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
     }
 
     try {
-      const dateTime = new Date(`${formData.date}T${formData.time}`);
+      // Store as plain datetime string (no timezone conversion)
+      // This ensures 2:00 PM stays as 2:00 PM for everyone
+      const dateTimeString = `${formData.date}T${formData.time}:00`;
 
       const submitData = {
         title: formData.title,
         description: formData.description,
         price: parseFloat(formData.price),
-        date_time: dateTime.toISOString(),
+        date_time: dateTimeString,
         duration_minutes: parseInt(formData.duration_minutes),
         max_capacity: parseInt(formData.max_capacity),
         location: formData.location,
@@ -208,16 +211,25 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
 
   const formatDateTimeDisplay = (dateString, timeString) => {
     if (!dateString || !timeString) return "Not set";
-    const date = new Date(`${dateString}T${timeString}`);
-    return date.toLocaleString("en-US", {
+    
+    // Parse without timezone conversion
+    const [year, month, day] = dateString.split('-');
+    const [hour, minute] = timeString.split(':');
+    
+    const date = new Date(year, month - 1, day);
+    const dateStr = date.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
       year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
     });
+    
+    const hourNum = parseInt(hour);
+    const ampm = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum % 12 || 12;
+    const timeStr = `${displayHour}:${minute} ${ampm}`;
+    
+    return `${dateStr} at ${timeStr}`;
   };
 
   useEffect(() => {
@@ -227,18 +239,20 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
           setLoading(true);
           const activityData = await activityService.show(activityId);
 
+          // Parse date_time as plain string (no timezone conversion)
           let date = "";
           let time = "09:00";
 
           if (activityData.date_time) {
-            const activityDate = new Date(activityData.date_time);
-            date = activityDate.toISOString().split("T")[0];
-
-            const minutes = activityDate.getMinutes();
-            const roundedMinutes = Math.round(minutes / 15) * 15;
-            const hour = activityDate.getHours().toString().padStart(2, "0");
-            const minute = roundedMinutes.toString().padStart(2, "0");
-            time = `${hour}:${minute}`;
+            // Split the datetime string directly
+            const parts = activityData.date_time.split('T');
+            date = parts[0]; // YYYY-MM-DD
+            
+            if (parts[1]) {
+              // Get HH:MM from the time part
+              const timeParts = parts[1].split(':');
+              time = `${timeParts[0]}:${timeParts[1]}`; // HH:MM
+            }
           }
 
           setFormData({
@@ -289,11 +303,7 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
         autoCloseTime={2000}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -542,7 +552,7 @@ const ActivityForm = ({ handleAddActivity, handleUpdateActivity }) => {
                     ?.label || "Not set"}
                 </p>
                 <p>
-                  <strong>Price:</strong> BHD
+                  <strong>Price:</strong> BHD{" "}
                   {parseFloat(formData.price || 0).toFixed(2)} per person
                 </p>
                 <p>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';  
 import { Link, useNavigate } from 'react-router-dom';
+import HeroSection from '../HeroSection/HeroSection';
 import styles from './ProductList.module.css';
 import * as productService from '../../services/productService';
 import * as favoriteService from '../../services/favoriteService';
@@ -345,11 +346,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
   if (loading) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.emptyState}>
             <div className={styles.loadingSpinner}></div>
@@ -396,11 +393,7 @@ const ProductList = ({ user, products: initialProducts = [], setProducts }) => {
         autoCloseTime={2000}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <div className={styles.headerSection}>

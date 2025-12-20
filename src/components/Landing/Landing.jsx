@@ -1,15 +1,12 @@
 import { Link } from "react-router-dom";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./Landing.module.css";
 
 const Landing = () => {
   return (
     <main className={styles.container}>
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
-
+      <HeroSection title="FarmVenture" />
+      
       <div className={styles.contentSection}>
         <section className={styles.aboutSection}>
           <h2>About Us:</h2>

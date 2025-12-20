@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./ActivityList.module.css";
 import * as activityService from "../../services/activitiesService";
 import * as bookingService from "../../services/bookingService";
@@ -111,7 +112,13 @@ const ActivityList = ({
   };
 
   const formatDate = (dateTime) => {
-    const date = new Date(dateTime);
+    // Parse UTC datetime string directly without timezone conversion
+    const dateTimeParts = dateTime.split('T');
+    const datePart = dateTimeParts[0]; // YYYY-MM-DD
+    
+    const [year, month, day] = datePart.split('-');
+    const date = new Date(year, month - 1, day);
+    
     return date.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
@@ -121,11 +128,16 @@ const ActivityList = ({
   };
 
   const formatTime = (dateTime) => {
-    const date = new Date(dateTime);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    // Parse UTC datetime string directly without timezone conversion
+    const dateTimeParts = dateTime.split('T');
+    const timePart = dateTimeParts[1] ? dateTimeParts[1].split(':') : ['00', '00'];
+    
+    const hour = parseInt(timePart[0]);
+    const minute = timePart[1];
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    
+    return `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
   };
 
   const handleDeleteClick = (activityId, e) => {
@@ -274,11 +286,7 @@ const ActivityList = ({
   if (loading) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.emptyState}>
             <div className={styles.loadingSpinner}></div>
@@ -313,11 +321,7 @@ const ActivityList = ({
         showCancel={false}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <div className={styles.headerSection}>

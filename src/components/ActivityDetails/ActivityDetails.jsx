@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import * as activityService from "../../services/activitiesService";
 import * as bookingService from "../../services/bookingService";
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./ActivityDetails.module.css";
 import Loading from "../Loading/Loading";
 import PopupAlert from "../PopupAlert/PopupAlert";
@@ -31,17 +32,29 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   };
 
   const formatDateTime = (dateTime) => {
-    const date = new Date(dateTime);
+    // Parse UTC datetime string directly without timezone conversion
+    const dateTimeParts = dateTime.split('T');
+    const datePart = dateTimeParts[0]; // YYYY-MM-DD
+    const timePart = dateTimeParts[1] ? dateTimeParts[1].split(':') : ['00', '00'];
+    
+    // Create date object from parts for formatting
+    const [year, month, day] = datePart.split('-');
+    const date = new Date(year, month - 1, day);
+    
     const dateStr = date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
-    const timeStr = date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    
+    // Format time from the parsed parts
+    const hour = parseInt(timePart[0]);
+    const minute = timePart[1];
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    const timeStr = `${displayHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
+    
     return { dateStr, timeStr };
   };
 
@@ -125,11 +138,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
   if (!activity) {
     return (
       <main className={styles.container}>
-        <div className={styles.heroSection}>
-          <div className={styles.heroOverlay}>
-            <h1 className={styles.heroTitle}>FarmVenture</h1>
-          </div>
-        </div>
+        <HeroSection title="FarmVenture" height="300px" />
         <div className={styles.contentSection}>
           <div className={styles.error}>Activity not found</div>
         </div>
@@ -178,11 +187,7 @@ const ActivityDetails = ({ user, handleDeleteActivity }) => {
         autoCloseTime={2000}
       />
 
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
+      <HeroSection title="FarmVenture" height="300px" />
 
       <div className={styles.contentSection}>
         <div className={styles.activityWrapper}>

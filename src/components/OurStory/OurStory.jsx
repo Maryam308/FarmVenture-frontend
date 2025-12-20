@@ -1,14 +1,11 @@
+import HeroSection from "../HeroSection/HeroSection";
 import styles from "./OurStory.module.css";
 
 const OurStory = () => {
   return (
     <main className={styles.container}>
-      <div className={styles.heroSection}>
-        <div className={styles.heroOverlay}>
-          <h1 className={styles.heroTitle}>FarmVenture</h1>
-        </div>
-      </div>
-
+      <HeroSection title="FarmVenture" />
+      
       <div className={styles.contentSection}>
         <section className={styles.storyCard}>
           <h2>Our story:</h2>
